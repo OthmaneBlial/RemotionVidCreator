@@ -6,6 +6,28 @@
 
 ---
 
+## ✅ Completed Features
+
+### Better Script Generation with Claude AI ✅
+**Status:** ✅ Done | **Difficulty:** Medium | **Impact:** High
+
+Uses Claude AI (Sonnet 3.5) for engaging scripts:
+
+**Usage:**
+```bash
+export ANTHROPIC_API_KEY=your_key_here
+npm run generate -- "AI" --use-ai
+```
+
+**Features:**
+- Viral-worthy hooks
+- 3 tone options: humorous, storytelling added
+- Better structure for short-form video
+- Fallback to template if API fails
+- JSON parsing with error handling
+
+---
+
 ## Priority Legend
 
 | Priority | Description |
@@ -106,31 +128,6 @@ Add royalty-free background music:
 
 ```bash
 npm run generate -- "AI" --music epic
-```
-
----
-
-### 5. Better Script Generation with Free AI 🤖
-**Status:** 📋 Todo | **Difficulty:** Medium | **Impact:** High
-
-Use free AI APIs for better scripts:
-
-**Free Options:**
-- [Hugging Face Inference API](https://huggingface.co/inference-api) - Free tier
-- [Groq](https://groq.com/) - Free API tier for Llama models
-- [Ollama](https://ollama.com/) - Local LLM, completely free
-- [Cohere](https://cohere.com/) - Free tier available
-
-**Enhancements:**
-- More engaging hooks
-- Witty humor options
-- Storytelling structure
-- Call-to-action variations
-- Fact-checked content
-
-**Implementation:**
-```bash
-npm run generate -- "AI" --script-style humorous --use-ai groq
 ```
 
 ---
@@ -685,11 +682,11 @@ Multiple users working together:
 
 ## 📊 Progress Tracking
 
-### Overall Progress: 4/40 (10%)
+### Overall Progress: 1/40 (2.5%)
 
 | Priority | Done | Total | Percent |
 |----------|------|-------|---------|
-| P0 - Critical | 0 | 5 | 0% |
+| P0 - Critical | 1 | 5 | 20% |
 | P1 - High | 0 | 8 | 0% |
 | P2 - Medium | 0 | 10 | 0% |
 | P3 - Low | 0 | 17 | 0% |
@@ -717,6 +714,11 @@ Multiple users working together:
 ## 📝 Changelog
 
 ### 2026-01-26
+- **✅ Completed: AI Script Generation with Claude**
+  - Integrated Claude 3.5 Sonnet API
+  - Added --use-ai CLI flag
+  - New tones: humorous, storytelling
+  - Fallback to template on error
 - Created initial roadmap with 40 features
 - Organized by priority (P0-P3)
 - All features use free tools only

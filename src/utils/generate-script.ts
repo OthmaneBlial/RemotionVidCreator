@@ -18,22 +18,35 @@ export interface ExplainerScript {
 
 export interface GenerateScriptOptions {
   topic: string;
-  tone?: "informative" | "casual" | "professional" | "dramatic";
+  tone?: "informative" | "casual" | "professional" | "dramatic" | "humorous" | "storytelling";
   complexity?: "simple" | "medium" | "detailed";
+  useAI?: boolean;
+  apiKey?: string;
 }
 
 /**
  * Generate an explainer script for a given topic.
- * This uses web search to gather information and structures it into a video script.
+ * Uses Claude AI API when useAI is true, falls back to Wikipedia + template.
  */
 export async function generateScript(
   options: GenerateScriptOptions
 ): Promise<ExplainerScript> {
-  const { topic, tone = "informative", complexity = "medium" } = options;
+  const { topic, tone = "informative", complexity = "medium", useAI = false, apiKey } = options;
 
-  // For now, we'll use a template-based approach with web search
-  // In production, you'd want to use an AI API for more sophisticated generation
+  // Try AI generation if requested
+  if (useAI && apiKey) {
+    try {
+      console.log("   🤖 Generating script with Claude AI...");
+      const script = await generateAIScript(topic, tone, complexity, apiKey);
+      console.log("   ✅ AI script generated successfully");
+      return script;
+    } catch (error) {
+      console.error("   ⚠️ AI generation failed, falling back to template");
+      console.error(`   Error: ${(error as Error).message}`);
+    }
+  }
 
+  // Fallback: Wikipedia + template
   try {
     // Search for information about the topic
     const searchResults = await searchTopic(topic);
@@ -44,6 +57,167 @@ export async function generateScript(
     console.error("Error generating script:", error);
     // Fallback to template-based generation
     return generateTemplateScript(topic);
+  }
+}
+
+/**
+ * Generate script using Claude API
+ */
+async function generateAIScript(
+  topic: string,
+  tone: string,
+  complexity: string,
+  apiKey: string
+): Promise<ExplainerScript> {
+  const prompt = buildAIPrompt(topic, tone, complexity);
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 4000,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Claude API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  const content = data.content[0]?.text || "";
+
+  return parseAIResponse(content, topic, tone);
+}
+
+/**
+ * Build the prompt for AI script generation
+ */
+function buildAIPrompt(topic: string, tone: string, complexity: string): string {
+  const toneInstructions: Record<string, string> = {
+    informative: "educational and clear, perfect for learning",
+    casual: "conversational and friendly, like explaining to a friend",
+    professional: "polished and business-appropriate",
+    dramatic: "intense and attention-grabbing, with powerful statements",
+    humorous: "funny and entertaining while still being informative",
+    storytelling: "narrative-driven, like telling a compelling story",
+  };
+
+  const complexityInstructions: Record<string, string> = {
+    simple: "Keep it simple. Avoid jargon. Explain like I'm 12.",
+    medium: "Balanced depth. Some details but not overwhelming.",
+    detailed: "Comprehensive. Go deep into nuances and specifics.",
+  };
+
+  return `You are an expert scriptwriter for viral short-form videos (TikTok, Reels, Shorts).
+
+Create an engaging explainer video script about: **${topic}**
+
+**Style Requirements:**
+- Tone: ${toneInstructions[tone] || toneInstructions.informative}
+- Complexity: ${complexityInstructions[complexity] || complexityInstructions.medium}
+- Duration: ~60-90 seconds of spoken content
+- Format: Vertical 9:16 video (TikTok/Reels style)
+
+**Script Structure:**
+1. HOOK - Grab attention in the first 2 seconds. Make it irresistible.
+2. SECTION 1 - "What is it?" - Clear explanation
+3. SECTION 2 - "Why does it matter?" - Real-world impact
+4. SECTION 3 - "Key takeaway" - The most important thing to remember
+5. OUTRO - Call to action (follow for more)
+
+**Content Guidelines:**
+- Hook must be provocative or intriguing
+- Each section should be 2-3 sentences max
+- Use simple, punchy language
+- Include specific examples when possible
+- Make it memorable and shareable
+- Avoid clichés unless used intentionally
+
+**Response Format (JSON):**
+\`\`\`json
+{
+  "title": "Catchy Title",
+  "hook": "The hook text here...",
+  "sections": [
+    {
+      "title": "What is it?",
+      "content": "Content here..."
+    },
+    {
+      "title": "Why does it matter?",
+      "content": "Content here..."
+    },
+    {
+      "title": "Key takeaway",
+      "content": "Content here..."
+    }
+  ],
+  "outro": "Outro text here..."
+}
+\`\`\`
+
+Generate the script now. Return ONLY the JSON, no other text.`;
+}
+
+/**
+ * Parse AI response into ExplainerScript
+ */
+function parseAIResponse(content: string, topic: string, tone: string): ExplainerScript {
+  try {
+    // Try to extract JSON from markdown code blocks
+    let jsonContent = content;
+
+    // Extract from code blocks if present
+    const codeBlockMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    if (codeBlockMatch) {
+      jsonContent = codeBlockMatch[1];
+    } else {
+      // Try to find JSON object directly
+      const objectMatch = content.match(/\{[\s\S]*\}/);
+      if (objectMatch) {
+        jsonContent = objectMatch[0];
+      }
+    }
+
+    const parsed = JSON.parse(jsonContent);
+
+    // Validate structure
+    if (!parsed.sections || !Array.isArray(parsed.sections)) {
+      throw new Error("Invalid script structure");
+    }
+
+    // Generate color scheme based on topic
+    const { primaryColor, accentColor } = generateColorScheme(topic);
+
+    return {
+      title: parsed.title || topic,
+      hook: parsed.hook || generateHook(topic, tone),
+      sections: parsed.sections.map((section: any) => ({
+        title: section.title || "Section",
+        content: section.content || "",
+        imageKeywords: generateImageKeywords(topic, section.title, "visual", "concept"),
+      })),
+      outro: parsed.outro || generateOutro(topic, tone),
+      primaryColor,
+      accentColor,
+      topicImages: generateImageKeywords(topic, "overview", "landscape", "intro"),
+    };
+  } catch (error) {
+    console.error("Failed to parse AI response, falling back to template");
+    throw error;
   }
 }
 
@@ -211,6 +385,16 @@ function generateHook(topic: string, tone: string): string {
       `You need to know this. This is ${topic}, explained.`,
       `${topic} will reshape everything. Here's why.`,
     ],
+    humorous: [
+      `Buckle up. We're talking about ${topic}, and yes, it's actually a big deal.`,
+      `Everyone pretends to understand ${topic}. Today, you actually will.`,
+      `${topic} sounds complicated because people love using big words. Let's fix that.`,
+    ],
+    storytelling: [
+      `It started as a niche idea, now ${topic} is everywhere. Here's the story.`,
+      `Imagine a world where ${topic} changes everything. That world is now.`,
+      `The journey of ${topic} is fascinating, and it's only just beginning.`,
+    ],
   };
 
   const options = hooks[tone] || hooks.informative;
@@ -238,6 +422,16 @@ function generateOutro(topic: string, tone: string): string {
       `${topic}. Remember it. Because it's happening right now.`,
       `The future of ${topic} is being written. You're now part of the conversation.`,
       `Don't forget what you just learned about ${topic}. It matters.`,
+    ],
+    humorous: [
+      `Boom. Now you know ${topic}. Go impress someone.`,
+      `You just became the smartest person in the room about ${topic}. Use it wisely.`,
+      `${topic} unlocked. You're welcome.`,
+    ],
+    storytelling: [
+      `The story of ${topic} continues, and now you're part of it.`,
+      `And that's where ${topic} stands today. The next chapter is yours to write.`,
+      `From obscure to essential - that's the story of ${topic}.`,
     ],
   };
 

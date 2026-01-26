@@ -7,6 +7,7 @@
  *   npm run generate -- "topic name"
  *   npm run generate -- "topic name" --tone casual
  *   npm run generate -- "topic name" --complexity simple --no-images
+ *   npm run generate -- "topic name" --use-ai
  */
 
 import { generateScript, type GenerateScriptOptions } from "../src/utils/generate-script.js";
@@ -37,10 +38,16 @@ function parseArgs(cliArgs: string[]): {
     console.error("❌ Error: Please provide a topic");
     console.log("\nUsage: npm run generate -- \"topic name\" [options]");
     console.log("\nOptions:");
-    console.log("  --tone <informative|casual|professional|dramatic>");
+    console.log("  --tone <informative|casual|professional|dramatic|humorous|storytelling>");
     console.log("  --complexity <simple|medium|detailed>");
     console.log("  --output <path>");
-    console.log("  --no-images  Skip fetching images from Unsplash");
+    console.log("  --no-images    Skip fetching images");
+    console.log("  --use-ai       Use Claude AI for script generation");
+    console.log("\nEnvironment Variables:");
+    console.log("  ANTHROPIC_API_KEY    Your Anthropic API key for Claude AI");
+    console.log("\nExamples:");
+    console.log("  npm run generate -- \"AI\" --use-ai");
+    console.log("  npm run generate -- \"Space\" --tone storytelling --use-ai");
     process.exit(1);
   }
 
@@ -62,6 +69,16 @@ function parseArgs(cliArgs: string[]): {
         break;
       case "--no-images":
         fetchImages = false;
+        break;
+      case "--use-ai":
+        options.useAI = true;
+        options.apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!options.apiKey) {
+          console.error("❌ Error: ANTHROPIC_API_KEY environment variable not set");
+          console.error("\nGet your API key at: https://console.anthropic.com/");
+          console.error("Then run: export ANTHROPIC_API_KEY=your_key_here");
+          process.exit(1);
+        }
         break;
     }
   }
@@ -256,7 +273,8 @@ async function main() {
   console.log(`📚 Topic:    ${topic}`);
   console.log(`🎭 Tone:     ${options.tone || "informative"}`);
   console.log(`📊 Level:    ${options.complexity || "medium"}`);
-  console.log(`🖼️  Images:   ${fetchImages ? "Yes (Unsplash)" : "No"}`);
+  console.log(`🤖 AI:       ${options.useAI ? "Yes (Claude)" : "No (Template)"}`);
+  console.log(`🖼️  Images:   ${fetchImages ? "Yes (Lorem Picsum)" : "No"}`);
   console.log(`📁 Output:   ${outputPath}\n`);
 
   // Generate script
