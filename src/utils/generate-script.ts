@@ -34,9 +34,16 @@ export async function generateScript(
   const { topic, tone = "informative", complexity = "medium", useAI = false, apiKey } = options;
 
   // Try AI generation if requested
-  if (useAI && apiKey) {
+  if (useAI) {
     try {
       console.log("   🤖 Generating script with Claude AI...");
+      // If no API key provided, use mock/demo mode
+      if (!apiKey) {
+        console.log("   🧪 Using DEMO mode (no API key)");
+        const script = await generateMockAIScript(topic, tone, complexity);
+        console.log("   ✅ Demo script generated successfully");
+        return script;
+      }
       const script = await generateAIScript(topic, tone, complexity, apiKey);
       console.log("   ✅ AI script generated successfully");
       return script;
@@ -58,6 +65,150 @@ export async function generateScript(
     // Fallback to template-based generation
     return generateTemplateScript(topic);
   }
+}
+
+/**
+ * Generate mock AI script (demo mode without API key)
+ * This simulates what Claude would return
+ */
+async function generateMockAIScript(
+  topic: string,
+  tone: string,
+  complexity: string
+): Promise<ExplainerScript> {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const { primaryColor, accentColor } = generateColorScheme(topic);
+
+  // Pre-written high-quality scripts for different tones
+  const mockScripts: Record<string, { hook: string; sections: Array<{title: string; content: string}>; outro: string }> = {
+    humorous: {
+      hook: `Everyone pretends to understand ${topic}. Today, you actually will. No more nodding along like you know what's going on.`,
+      sections: [
+        {
+          title: "What is it really?",
+          content: `Think of ${topic} like that one friend who overcomplicates everything. Strip away the jargon and it's actually pretty simple. It's just a tool/method/concept that solves a specific problem people have been dealing with forever.`
+        },
+        {
+          title: "Why should you care?",
+          content: `Here's the thing - ${topic} is already affecting your life. Whether you realize it or not. The people who understand it? They're the ones making decisions while everyone else is still confused.`
+        },
+        {
+          title: "The bottom line",
+          content: `You don't need to be an expert. You just need to understand the basics. And now? You already know more than 90% of people who pretend to get ${topic}.`
+        }
+      ],
+      outro: `Boom. ${topic} unlocked. Go impress someone with your knowledge. Or don't. Either way, you're welcome.`
+    },
+    storytelling: {
+      hook: `It started as a niche idea that experts said would never catch on. Now? ${topic} is everywhere. This is that story.`,
+      sections: [
+        {
+          title: "The origin",
+          content: `Picture this: a time when ${topic} didn't exist. People were struggling with the problem it would eventually solve. Then came the breakthrough - a simple idea that would change everything.`
+        },
+        {
+          title: "The turning point",
+          content: `What happened next was unexpected. ${topic} didn't just solve the original problem - it opened doors nobody even knew existed. Suddenly, everyone was talking about it. Using it. Building on it.`
+        },
+        {
+          title: "Where we are now",
+          content: `Today, ${topic} is so woven into our daily lives that we barely notice it. But the story isn't over. In fact, we're still writing the next chapter. And you? You're now part of it.`
+        }
+      ],
+      outro: `The story of ${topic} continues. Follow to see what happens next.`
+    },
+    dramatic: {
+      hook: `Stop everything. Because once you understand ${topic}, nothing will look the same again.`,
+      sections: [
+        {
+          title: "The revelation",
+          content: `${topic} isn't just another trend. It's not something you can ignore. This is fundamental. This changes how everything works. And most people still have no idea what's coming.`
+        },
+        {
+          title: "The impact",
+          content: `Every industry. Every career. Every aspect of daily life - ${topic} is reshaping it all. The question isn't whether you'll be affected. The question is whether you'll be ready.`
+        },
+        {
+          title: "Your move",
+          content: `You have two choices right now. Forget what you just learned and let the future happen to you. Or lean in. Understand ${topic}. And be ahead of the curve.`
+        }
+      ],
+      outro: `The future doesn't wait. Neither should you. ${topic} is here. Remember that.`
+    },
+    informative: {
+      hook: `${topic} is everywhere right now, but ask five people to explain it and you'll get five different answers. Let's end the confusion.`,
+      sections: [
+        {
+          title: "Breaking it down",
+          content: `At its core, ${topic} is simply [core concept]. Think of it like a relatable analogy that makes the complex suddenly simple. No jargon. No fluff. Just what it actually does.`
+        },
+        {
+          title: "Real-world impact",
+          content: `Here's why ${topic} matters: it solves a real problem. Companies use it to [specific use case]. Everyday people use it to [another use case]. The applications are growing every day.`
+        },
+        {
+          title: "Key takeaway",
+          content: `You don't need to be an expert to benefit from ${topic}. Understanding the basics puts you ahead of most people. And the basics? You just learned them.`
+        }
+      ],
+      outro: `Now you actually understand ${topic}. Share this with someone who's still confused. They'll thank you.`
+    },
+    casual: {
+      hook: `So you keep hearing about ${topic} everywhere. But like... what actually is it? Let's figure this out.`,
+      sections: [
+        {
+          title: "The simple version",
+          content: `Okay so ${topic} is basically [simple explanation]. That's it. All the complicated stuff people say? Just different ways of explaining this one simple thing.`
+        },
+        {
+          title: "Why people care",
+          content: `${topic} is useful because [practical reason]. It helps people [specific benefit]. That's literally why everyone's talking about it - it actually works for the thing it's supposed to do.`
+        },
+        {
+          title: "What you need to know",
+          content: `Bottom line: ${topic} is worth understanding. Not because it's trendy, but because it's actually useful. And now you get it. Nice.`
+        }
+      ],
+      outro: `And that's ${topic}. Not so scary after you break it down, right? Follow for more stuff explained simply.`
+    },
+    professional: {
+      hook: `In the next few minutes, you'll gain a comprehensive understanding of ${topic} - a critical topic in today's landscape.`,
+      sections: [
+        {
+          title: "Overview and definition",
+          content: `${topic} represents a significant development in [field/industry]. Formally defined as [definition], it addresses the fundamental challenge of [core problem] through an innovative approach.`
+        },
+        {
+          title: "Strategic implications",
+          content: `Organizations leveraging ${topic} have demonstrated measurable improvements in [metrics]. The competitive advantage is clear: early adopters are capturing market share while latecomers risk obsolescence.`
+        },
+        {
+          title: "Key considerations",
+          content: `When evaluating ${topic} for your context, consider [factors]. The potential ROI is substantial, but success requires thoughtful implementation aligned with business objectives.`
+        }
+      ],
+      outro: `${topic} continues to evolve rapidly. Stay informed on developments to maintain competitive advantage.`
+    }
+  };
+
+  // Get the mock script for the requested tone, default to informative
+  const mockScript = mockScripts[tone] || mockScripts.informative;
+
+  return {
+    title: topic,
+    hook: mockScript.hook,
+    sections: mockScript.sections.map(s => ({
+      title: s.title,
+      content: s.content,
+      imageKeywords: generateImageKeywords(topic, s.title)
+    })),
+    outro: mockScript.outro,
+    primaryColor,
+    accentColor,
+    topicImages: generateImageKeywords(topic, "overview", "concept", "intro")
+  };
 }
 
 /**

@@ -72,13 +72,8 @@ function parseArgs(cliArgs: string[]): {
         break;
       case "--use-ai":
         options.useAI = true;
-        options.apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!options.apiKey) {
-          console.error("❌ Error: ANTHROPIC_API_KEY environment variable not set");
-          console.error("\nGet your API key at: https://console.anthropic.com/");
-          console.error("Then run: export ANTHROPIC_API_KEY=your_key_here");
-          process.exit(1);
-        }
+        options.apiKey = process.env.ANTHROPIC_API_KEY || undefined;
+        // No longer require API key - demo mode will be used if not provided
         break;
     }
   }
@@ -273,7 +268,10 @@ async function main() {
   console.log(`📚 Topic:    ${topic}`);
   console.log(`🎭 Tone:     ${options.tone || "informative"}`);
   console.log(`📊 Level:    ${options.complexity || "medium"}`);
-  console.log(`🤖 AI:       ${options.useAI ? "Yes (Claude)" : "No (Template)"}`);
+  const aiMode = options.useAI
+    ? (options.apiKey ? "Yes (Claude API)" : "Yes (Demo Mode)")
+    : "No (Template)";
+  console.log(`🤖 AI:       ${aiMode}`);
   console.log(`🖼️  Images:   ${fetchImages ? "Yes (Lorem Picsum)" : "No"}`);
   console.log(`📁 Output:   ${outputPath}\n`);
 
