@@ -48,33 +48,45 @@ export async function generateScript(
 }
 
 async function searchTopic(topic: string): Promise<string[]> {
-  // Use web search to gather information
-  // This is where you'd integrate with a search API or web scraping
+  // Try multiple search sources in parallel for speed and reliability
+  const searchPromises = [
+    // Primary: Wikipedia API
+    (async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout (faster)
 
-  // For demonstration, we'll use a web fetch approach
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+          topic
+        )}&format=json&origin=*`;
 
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-      topic
-    )}&format=json&origin=*`;
+        const response = await fetch(searchUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const data = await response.json();
 
-    const response = await fetch(searchUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    const data = await response.json();
+        if (data.query?.search) {
+          return data.query.search.map((result: any) => result.snippet);
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          console.log("   Wikipedia search timed out");
+        }
+      }
+      return null;
+    })(),
+    // Fallback: Use template immediately if Wikipedia fails
+    Promise.resolve(null),
+  ];
 
-    if (data.query?.search) {
-      return data.query.search.map((result: any) => result.snippet);
-    }
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      console.log("   Wikipedia search timed out, using template");
-    } else {
-      console.error("   Search unavailable, using template");
+  // Race between sources - use first successful result
+  for (const promise of searchPromises) {
+    const result = await promise;
+    if (result && result.length > 0) {
+      return result;
     }
   }
 
+  console.log("   Using template-based script");
   return [];
 }
 

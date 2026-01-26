@@ -6,7 +6,7 @@ import {
   Img,
   staticFile,
 } from "remotion";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 export interface SlideImage {
   src: string;
@@ -36,31 +36,42 @@ export const ImageSlideshow = ({
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
-  // Calculate which image to show
-  const imageIndex = Math.floor(frame / durationPerImage) % images.length;
+  // MEMOIZED: Calculate which image to show
+  const imageIndex = useMemo(
+    () => Math.floor(frame / durationPerImage) % images.length,
+    [frame, durationPerImage, images.length]
+  );
+
   const imageFrame = frame % durationPerImage;
   const progress = imageFrame / durationPerImage;
 
-  // Ken Burns zoom and pan values
-  const intensityValues = {
-    subtle: { scaleIn: 1.05, scaleOut: 1.1, pan: 20 },
-    medium: { scaleIn: 1.1, scaleOut: 1.2, pan: 40 },
-    strong: { scaleIn: 1.15, scaleOut: 1.3, pan: 60 },
-  };
+  // MEMOIZED: Ken Burns zoom and pan values (cached per intensity)
+  const intensityValues = useMemo(
+    () => ({
+      subtle: { scaleIn: 1.05, scaleOut: 1.1, pan: 20 },
+      medium: { scaleIn: 1.1, scaleOut: 1.2, pan: 40 },
+      strong: { scaleIn: 1.15, scaleOut: 1.3, pan: 60 },
+    }),
+    []
+  );
 
   const intensity = intensityValues[kenBurnsIntensity];
 
-  // Vary direction per image for visual interest
-  const directions = [
-    { x: -1, y: -1 }, // top-left
-    { x: 1, y: -1 },  // top-right
-    { x: -1, y: 1 },  // bottom-left
-    { x: 1, y: 1 },   // bottom-right
-    { x: 0, y: -1 },  // center-top
-    { x: 0, y: 1 },   // center-bottom
-  ];
-
-  const direction = directions[imageIndex % directions.length];
+  // MEMOIZED: Vary direction per image for visual interest
+  const direction = useMemo(
+    () => {
+      const directions = [
+        { x: -1, y: -1 }, // top-left
+        { x: 1, y: -1 },  // top-right
+        { x: -1, y: 1 },  // bottom-left
+        { x: 1, y: 1 },   // bottom-right
+        { x: 0, y: -1 },  // center-top
+        { x: 0, y: 1 },   // center-bottom
+      ];
+      return directions[imageIndex % directions.length];
+    },
+    [imageIndex]
+  );
 
   // Calculate Ken Burns effect
   const scale = interpolate(
@@ -80,19 +91,20 @@ export const ImageSlideshow = ({
 
   // Transition opacity
   const transitionDuration = 15; // frames
-  let opacity = 1;
-
-  if (imageFrame < transitionDuration) {
-    // Fade in
-    opacity = interpolate(imageFrame, [0, transitionDuration], [0, 1]);
-  } else if (imageFrame > durationPerImage - transitionDuration) {
-    // Fade out
-    opacity = interpolate(
-      imageFrame,
-      [durationPerImage - transitionDuration, durationPerImage],
-      [1, 0]
-    );
-  }
+  const opacity = useMemo(() => {
+    if (imageFrame < transitionDuration) {
+      // Fade in
+      return interpolate(imageFrame, [0, transitionDuration], [0, 1]);
+    } else if (imageFrame > durationPerImage - transitionDuration) {
+      // Fade out
+      return interpolate(
+        imageFrame,
+        [durationPerImage - transitionDuration, durationPerImage],
+        [1, 0]
+      );
+    }
+    return 1;
+  }, [imageFrame, durationPerImage, transitionDuration]);
 
   const currentImage = images[imageIndex];
 
@@ -181,8 +193,14 @@ export const KenBurnsImage = ({
   const duration = 5 * fps;
   const progress = Math.min(frame / duration, 1);
 
-  const scaleStart = zoomDirection === "in" ? 1 : intensity;
-  const scaleEnd = zoomDirection === "in" ? intensity : 1;
+  // MEMOIZED: Calculate scale values
+  const { scaleStart, scaleEnd } = useMemo(
+    () => ({
+      scaleStart: zoomDirection === "in" ? 1 : intensity,
+      scaleEnd: zoomDirection === "in" ? intensity : 1,
+    }),
+    [zoomDirection, intensity]
+  );
 
   const scale = interpolate(progress, [0, 1], [scaleStart, scaleEnd]);
 

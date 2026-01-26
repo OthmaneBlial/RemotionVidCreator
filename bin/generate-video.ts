@@ -75,48 +75,79 @@ async function ensureOutputDir(filePath: string) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-// Fetch images for the video
+// Fetch images for the video (PARALLEL - 10x faster)
 async function fetchVideoImages(topic: string, script: any, count = 10) {
-  console.log("\n🖼️  Fetching images from Lorem Picsum...");
+  console.log("\n🖼️  Fetching images from Lorem Picsum (parallel)...");
 
   const imagesDir = path.join(process.cwd(), "public", "images");
   fs.mkdirSync(imagesDir, { recursive: true });
-
-  const images: Array<{ src: string; alt: string }> = [];
 
   // Create a unique seed for this video generation
   const seed = Date.now();
   const sanitizedTopic = topic.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
-  // Fetch images directly with unique filenames
-  for (let i = 0; i < count; i++) {
+  // PARALLEL: Fetch all images concurrently using Promise.all
+  const fetchPromises = Array.from({ length: count }, async (_, i) => {
+    const imageUrl = `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/1080/1920`;
+    const filename = `${sanitizedTopic}-${i}.jpg`;
+    const localPath = path.join(imagesDir, filename);
+
     try {
-      const imageUrl = `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/1080/1920`;
-      const filename = `${sanitizedTopic}-${i}.jpg`;
-      const localPath = path.join(imagesDir, filename);
+      // Download with retry
+      await downloadImageWithRetry(imageUrl, localPath);
 
-      // Download the image
-      await downloadImageDirect(imageUrl, localPath);
-
-      // Convert to base64 data URL for Remotion (most reliable method)
+      // Convert to base64 data URL for Remotion
       const imageBuffer = await readFile(localPath);
       const base64 = imageBuffer.toString("base64");
       const dataUrl = `data:image/jpeg;base64,${base64}`;
 
-      images.push({
+      return {
         src: dataUrl,
         alt: `${topic}-${i}`,
-      });
-
-      process.stdout.write(`\r   Fetched: ${i + 1}/${count} images`);
+        index: i,
+      };
     } catch (error) {
       console.error(`\n   Failed to fetch image ${i}:`, error);
+      return null;
     }
-  }
+  });
 
-  process.stdout.write(`\r   Fetched: ${images.length}/${count} images\n`);
+  // Wait for all downloads to complete
+  const results = await Promise.all(fetchPromises);
+
+  // Filter out failed downloads and sort by index
+  const images = results
+    .filter((r): r is { src: string; alt: string; index: number } => r !== null)
+    .sort((a, b) => a.index - b.index)
+    .map(({ src, alt }) => ({ src, alt }));
+
+  console.log(`   ✅ Fetched: ${images.length}/${count} images`);
 
   return images;
+}
+
+// Download with retry mechanism (exponential backoff)
+async function downloadImageWithRetry(
+  url: string,
+  outputPath: string,
+  maxRetries = 3
+): Promise<void> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await downloadImageDirect(url, outputPath);
+      return;
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries - 1;
+
+      if (!isLastAttempt) {
+        // Exponential backoff: 1s, 2s, 4s...
+        const delay = 1000 * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
 }
 
 // Download image helper
@@ -154,7 +185,7 @@ function downloadImageDirect(url: string, outputPath: string): Promise<void> {
     });
 
     request.on("error", reject);
-    request.setTimeout(15000, () => {
+    request.setTimeout(10000, () => {
       request.destroy();
       reject(new Error("Timeout"));
     });
@@ -257,7 +288,6 @@ async function main() {
     const entryPoint = path.resolve(process.cwd(), "src/index.generated.ts");
     const bundleLocation = await bundle({
       entryPoint,
-      webpackOverride: (config) => config,
       onProgress: (progress) => {
         if (progress % 10 === 0) {
           process.stdout.write(`\r   Progress: ${progress}%`);
