@@ -1,6 +1,7 @@
 export interface ScriptSection {
   title: string;
   content: string;
+  imageKeywords?: string[]; // Keywords for image search
 }
 
 export interface ExplainerScript {
@@ -8,6 +9,11 @@ export interface ExplainerScript {
   hook: string;
   sections: ScriptSection[];
   outro: string;
+  // Color scheme suggestions
+  primaryColor?: string;
+  accentColor?: string;
+  // Main topic image keywords
+  topicImages?: string[];
 }
 
 export interface GenerateScriptOptions {
@@ -78,29 +84,89 @@ function buildScriptFromSearch(
       .replace(/\.\.\.$/, "")
   );
 
+  // Generate color scheme based on topic
+  const { primaryColor, accentColor } = generateColorScheme(topic);
+
+  // Generate image keywords for each section
+  const sections = [
+    {
+      title: "What is it?",
+      content: keyPoints[0] || `Understanding ${topic} starts with knowing the basics. Let's break it down.`,
+      imageKeywords: generateImageKeywords(topic, "concept", "abstract", "technology"),
+    },
+    {
+      title: "Why does it matter?",
+      content:
+        keyPoints[1] ||
+        `${topic} has a significant impact on how we work and live. Understanding it gives you an edge.`,
+      imageKeywords: generateImageKeywords(topic, "impact", "innovation", "future"),
+    },
+    {
+      title: "The key takeaway",
+      content:
+        keyPoints[2] ||
+        `The main point to remember is that ${topic} is more relevant now than ever.`,
+      imageKeywords: generateImageKeywords(topic, "success", "growth", "opportunity"),
+    },
+  ];
+
   return {
     title: topic,
     hook: generateHook(topic, tone),
-    sections: [
-      {
-        title: "What is it?",
-        content: keyPoints[0] || `Understanding ${topic} starts with knowing the basics. Let's break it down.`,
-      },
-      {
-        title: "Why does it matter?",
-        content:
-          keyPoints[1] ||
-          `${topic} has a significant impact on how we work and live. Understanding it gives you an edge.`,
-      },
-      {
-        title: "The key takeaway",
-        content:
-          keyPoints[2] ||
-          `The main point to remember is that ${topic} is more relevant now than ever.`,
-      },
-    ],
+    sections,
     outro: generateOutro(topic, tone),
+    primaryColor,
+    accentColor,
+    topicImages: generateImageKeywords(topic, "overview", "landscape"),
   };
+}
+
+/**
+ * Generate image keywords for a topic
+ */
+function generateImageKeywords(...inputs: string[]): string[] {
+  const keywords = new Set<string>();
+
+  inputs.forEach((input) => {
+    const words = input.toLowerCase().split(/\s+/);
+    words.forEach((word) => {
+      if (word.length > 3) {
+        keywords.add(word);
+      }
+    });
+  });
+
+  return Array.from(keywords).slice(0, 5);
+}
+
+/**
+ * Generate a color scheme based on the topic
+ */
+function generateColorScheme(topic: string): { primaryColor: string; accentColor: string } {
+  const topicLower = topic.toLowerCase();
+
+  const colorSchemes: Record<string, { primaryColor: string; accentColor: string }> = {
+    tech: { primaryColor: "#0f172a", accentColor: "#38bdf8" },
+    ai: { primaryColor: "#1a1a2e", accentColor: "#a855f7" },
+    science: { primaryColor: "#0c4a6e", accentColor: "#22d3ee" },
+    nature: { primaryColor: "#14532d", accentColor: "#4ade80" },
+    business: { primaryColor: "#1e293b", accentColor: "#f59e0b" },
+    health: { primaryColor: "#1e3a5f", accentColor: "#3b82f6" },
+    art: { primaryColor: "#2d1b4e", accentColor: "#ec4899" },
+    finance: { primaryColor: "#1a1a1a", accentColor: "#22c55e" },
+    education: { primaryColor: "#1e3a5f", accentColor: "#60a5fa" },
+    sports: { primaryColor: "#1a1a1a", accentColor: "#ef4444" },
+  };
+
+  // Check for keywords in topic
+  for (const [key, scheme] of Object.entries(colorSchemes)) {
+    if (topicLower.includes(key)) {
+      return scheme;
+    }
+  }
+
+  // Default scheme
+  return { primaryColor: "#0f172a", accentColor: "#38bdf8" };
 }
 
 function generateHook(topic: string, tone: string): string {
@@ -160,6 +226,8 @@ function generateOutro(topic: string, tone: string): string {
 }
 
 function generateTemplateScript(topic: string): ExplainerScript {
+  const { primaryColor, accentColor } = generateColorScheme(topic);
+
   return {
     title: topic,
     hook: `Let me explain ${topic} in a way that actually makes sense.`,
@@ -167,17 +235,23 @@ function generateTemplateScript(topic: string): ExplainerScript {
       {
         title: "The Basics",
         content: `${topic} is a fascinating subject that affects many aspects of our daily lives. Understanding it starts with the fundamentals.`,
+        imageKeywords: generateImageKeywords(topic, "concept", "introduction"),
       },
       {
         title: "Why It Matters",
         content: `The importance of ${topic} cannot be overstated. It has implications for how we work, live, and interact with the world around us.`,
+        imageKeywords: generateImageKeywords(topic, "importance", "impact"),
       },
       {
         title: "Looking Ahead",
         content: `The future of ${topic} is exciting and full of possibilities. Those who understand it now will be ahead of the curve.`,
+        imageKeywords: generateImageKeywords(topic, "future", "innovation"),
       },
     ],
     outro: `Now you understand ${topic}. Share this with someone who could benefit from knowing more.`,
+    primaryColor,
+    accentColor,
+    topicImages: generateImageKeywords(topic, "overview"),
   };
 }
 

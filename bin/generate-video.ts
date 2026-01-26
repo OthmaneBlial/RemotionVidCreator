@@ -6,16 +6,18 @@
  * Usage:
  *   npm run generate -- "topic name"
  *   npm run generate -- "topic name" --tone casual
- *   npm run generate -- "topic name" --complexity simple
+ *   npm run generate -- "topic name" --complexity simple --no-images
  */
 
 import { generateScript, type GenerateScriptOptions } from "../src/utils/generate-script.js";
+import { fetchUnsplashImages } from "../src/utils/fetch-images.js";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { webpackOverride } from "../remotion.webpack-override.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
+import https from "https";
+import http from "http";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +29,7 @@ function parseArgs(cliArgs: string[]): {
   topic: string;
   options: GenerateScriptOptions;
   outputPath: string;
+  fetchImages: boolean;
 } {
   const topic = cliArgs[0];
 
@@ -37,11 +40,13 @@ function parseArgs(cliArgs: string[]): {
     console.log("  --tone <informative|casual|professional|dramatic>");
     console.log("  --complexity <simple|medium|detailed>");
     console.log("  --output <path>");
+    console.log("  --no-images  Skip fetching images from Unsplash");
     process.exit(1);
   }
 
   const options: GenerateScriptOptions = { topic };
   let outputPath = path.join(process.cwd(), "output", `${topic.replace(/\s+/g, "-").toLowerCase()}.mp4`);
+  let fetchImages = true;
 
   for (let i = 1; i < cliArgs.length; i++) {
     const arg = cliArgs[i];
@@ -55,10 +60,13 @@ function parseArgs(cliArgs: string[]): {
       case "--output":
         outputPath = cliArgs[++i];
         break;
+      case "--no-images":
+        fetchImages = false;
+        break;
     }
   }
 
-  return { topic, options, outputPath };
+  return { topic, options, outputPath, fetchImages };
 }
 
 // Create output directory if it doesn't exist
@@ -67,8 +75,70 @@ async function ensureOutputDir(filePath: string) {
   await fs.mkdir(dir, { recursive: true });
 }
 
+// Fetch images for the video
+async function fetchVideoImages(topic: string, script: any, count = 10) {
+  console.log("\n🖼️  Fetching images from Unsplash...");
+
+  const imagesDir = path.join(process.cwd(), "public", "images");
+  await fs.mkdir(imagesDir, { recursive: true });
+
+  const images: Array<{ src: string; alt: string }> = [];
+
+  // Collect all keywords from script
+  const allKeywords = new Set<string>();
+  allKeywords.add(topic);
+
+  if (script.topicImages) {
+    script.topicImages.forEach((kw: string) => allKeywords.add(kw));
+  }
+
+  script.sections.forEach((section: any) => {
+    if (section.imageKeywords) {
+      section.imageKeywords.forEach((kw: string) => allKeywords.add(kw));
+    }
+  });
+
+  const keywordArray = Array.from(allKeywords).slice(0, count);
+
+  for (let i = 0; i < Math.min(keywordArray.length, count); i++) {
+    const keyword = keywordArray[i];
+    try {
+      const fetchedImages = await fetchUnsplashImages(keyword, 1);
+      if (fetchedImages.length > 0) {
+        images.push({
+          src: fetchedImages[0].url,
+          alt: keyword,
+        });
+        process.stdout.write(`\r   Fetched: ${i + 1}/${count} images`);
+      }
+    } catch (error) {
+      console.error(`\n   Failed to fetch image for "${keyword}":`, error);
+    }
+  }
+
+  // If we didn't get enough images, fetch more generic ones
+  if (images.length < count) {
+    const remaining = count - images.length;
+    for (let i = 0; i < remaining; i++) {
+      try {
+        const fetchedImages = await fetchUnsplashImages(topic, 1);
+        if (fetchedImages.length > 0) {
+          images.push({
+            src: fetchedImages[0].url,
+            alt: `${topic}-${i}`,
+          });
+        }
+      } catch {}
+    }
+  }
+
+  process.stdout.write(`\r   Fetched: ${images.length}/${count} images\n`);
+
+  return images;
+}
+
 // Generate a temporary Root file with the generated script
-async function createTempRoot(script: any) {
+async function createTempRoot(script: any, images: any[]) {
   const rootTemplate = `import { Composition } from "remotion";
 import { ExplainerVideo } from "./compositions/ExplainerVideo";
 import { ExplainerVideoSchema } from "./compositions/ExplainerVideo/schema";
@@ -82,6 +152,7 @@ export const RemotionRoot = () => {
       defaultProps={{
         topic: ${JSON.stringify(script.title)},
         script: ${JSON.stringify(script)},
+        images: ${JSON.stringify(images)},
         colorScheme: "default",
       }}
       durationInFrames={900}
@@ -121,33 +192,41 @@ async function cleanup(rootPath: string, indexPath: string) {
 // Main function
 async function main() {
   console.log("🎬 Remotion Explainer Video Generator\n");
+  console.log("   ════════════════════════════════════\n");
 
-  const { topic, options, outputPath } = parseArgs(args);
+  const { topic, options, outputPath, fetchImages } = parseArgs(args);
 
-  console.log(`📚 Topic: ${topic}`);
-  console.log(`🎭 Tone: ${options.tone || "informative"}`);
-  console.log(`📊 Complexity: ${options.complexity || "medium"}`);
-  console.log(`📁 Output: ${outputPath}\n`);
+  console.log(`📚 Topic:    ${topic}`);
+  console.log(`🎭 Tone:     ${options.tone || "informative"}`);
+  console.log(`📊 Level:    ${options.complexity || "medium"}`);
+  console.log(`🖼️  Images:   ${fetchImages ? "Yes (Unsplash)" : "No"}`);
+  console.log(`📁 Output:   ${outputPath}\n`);
 
   // Generate script
   console.log("🔍 Researching topic and generating script...");
   const script = await generateScript(options);
 
   console.log("\n📝 Generated Script:");
-  console.log(`   Title: ${script.title}`);
-  console.log(`   Hook: ${script.hook.substring(0, 60)}...`);
+  console.log(`   Title:    ${script.title}`);
+  console.log(`   Accent:   ${script.accentColor || "#38bdf8"}`);
+  console.log(`   Hook:     ${script.hook.substring(0, 50)}...`);
   console.log(`   Sections: ${script.sections.length}`);
-  console.log(`   Outro: ${script.outro.substring(0, 60)}...\n`);
+
+  // Fetch images
+  let images: any[] = [];
+  if (fetchImages) {
+    images = await fetchVideoImages(topic, script, 10);
+  }
 
   // Ensure output directory exists
   await ensureOutputDir(outputPath);
 
   // Create temporary Root with generated script
-  const { rootPath, indexPath } = await createTempRoot(script);
+  const { rootPath, indexPath } = await createTempRoot(script, images);
 
   try {
     // Bundle the Remotion project
-    console.log("📦 Bundling project...");
+    console.log("\n📦 Bundling project...");
 
     const entryPoint = path.resolve(process.cwd(), "src/index.generated.ts");
     const bundleLocation = await bundle({
@@ -170,15 +249,18 @@ async function main() {
       inputProps: {
         topic: script.title,
         script,
+        images,
       },
     });
 
-    console.log(`   Duration: ${Math.floor(composition.durationInFrames / 30)}s`);
-    console.log(`   Dimensions: ${composition.width}x${composition.height}\n`);
+    const duration = Math.floor(composition.durationInFrames / 30);
+    console.log(`   Duration:   ${duration}s`);
+    console.log(`   Dimensions: ${composition.width}x${composition.height}`);
+    console.log(`   Images:     ${images.length} sourced\n`);
 
     // Render video
     console.log("🎬 Rendering video...");
-    console.log(`   This may take a few minutes...\n`);
+    console.log("   ════════════════════════════════════\n");
 
     await renderMedia({
       composition,
@@ -188,6 +270,7 @@ async function main() {
       inputProps: {
         topic: script.title,
         script,
+        images,
       },
       onProgress: ({ progress }) => {
         const percent = Math.floor(progress * 100);
@@ -216,5 +299,6 @@ async function main() {
 
 main().catch((error) => {
   console.error("\n❌ Error:", error.message);
+  console.error(error.stack);
   process.exit(1);
 });
