@@ -10,14 +10,17 @@
  */
 
 import { generateScript, type GenerateScriptOptions } from "../src/utils/generate-script.js";
-import { fetchUnsplashImages } from "../src/utils/fetch-images.js";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs/promises";
+import fs from "fs";
 import https from "https";
 import http from "http";
+
+// Dynamic imports for CommonJS modules
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,69 +75,90 @@ function parseArgs(cliArgs: string[]): {
 // Create output directory if it doesn't exist
 async function ensureOutputDir(filePath: string) {
   const dir = path.dirname(filePath);
-  await fs.mkdir(dir, { recursive: true });
+  fs.mkdirSync(dir, { recursive: true });
 }
 
 // Fetch images for the video
 async function fetchVideoImages(topic: string, script: any, count = 10) {
-  console.log("\n🖼️  Fetching images from Unsplash...");
+  console.log("\n🖼️  Fetching images from Lorem Picsum...");
 
   const imagesDir = path.join(process.cwd(), "public", "images");
-  await fs.mkdir(imagesDir, { recursive: true });
+  fs.mkdirSync(imagesDir, { recursive: true });
 
   const images: Array<{ src: string; alt: string }> = [];
 
-  // Collect all keywords from script
-  const allKeywords = new Set<string>();
-  allKeywords.add(topic);
+  // Create a unique seed for this video generation
+  const seed = Date.now();
+  const sanitizedTopic = topic.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
-  if (script.topicImages) {
-    script.topicImages.forEach((kw: string) => allKeywords.add(kw));
-  }
-
-  script.sections.forEach((section: any) => {
-    if (section.imageKeywords) {
-      section.imageKeywords.forEach((kw: string) => allKeywords.add(kw));
-    }
-  });
-
-  const keywordArray = Array.from(allKeywords).slice(0, count);
-
-  for (let i = 0; i < Math.min(keywordArray.length, count); i++) {
-    const keyword = keywordArray[i];
+  // Fetch images directly with unique filenames
+  for (let i = 0; i < count; i++) {
     try {
-      const fetchedImages = await fetchUnsplashImages(keyword, 1);
-      if (fetchedImages.length > 0) {
-        images.push({
-          src: fetchedImages[0].url,
-          alt: keyword,
-        });
-        process.stdout.write(`\r   Fetched: ${i + 1}/${count} images`);
-      }
-    } catch (error) {
-      console.error(`\n   Failed to fetch image for "${keyword}":`, error);
-    }
-  }
+      const imageUrl = `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/1080/1920`;
+      const filename = `${sanitizedTopic}-${i}.jpg`;
+      const localPath = path.join(imagesDir, filename);
 
-  // If we didn't get enough images, fetch more generic ones
-  if (images.length < count) {
-    const remaining = count - images.length;
-    for (let i = 0; i < remaining; i++) {
-      try {
-        const fetchedImages = await fetchUnsplashImages(topic, 1);
-        if (fetchedImages.length > 0) {
-          images.push({
-            src: fetchedImages[0].url,
-            alt: `${topic}-${i}`,
-          });
-        }
-      } catch {}
+      // Download the image
+      await downloadImageDirect(imageUrl, localPath);
+
+      images.push({
+        src: `/images/${filename}`, // Use relative path for Remotion
+        alt: `${topic}-${i}`,
+      });
+
+      process.stdout.write(`\r   Fetched: ${i + 1}/${count} images`);
+    } catch (error) {
+      console.error(`\n   Failed to fetch image ${i}:`, error);
     }
   }
 
   process.stdout.write(`\r   Fetched: ${images.length}/${count} images\n`);
 
   return images;
+}
+
+// Download image helper
+function downloadImageDirect(url: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = https.request(url, (response: any) => {
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        const redirectUrl = response.headers.location;
+        if (redirectUrl) {
+          downloadImageDirect(redirectUrl, outputPath).then(resolve).catch(reject);
+          return;
+        }
+      }
+
+      if (response.statusCode !== 200) {
+        reject(new Error(`HTTP ${response.statusCode}`));
+        return;
+      }
+
+      const fileStream = fs.createWriteStream(outputPath);
+      response.pipe(fileStream);
+
+      fileStream.on("finish", () => {
+        fileStream.close();
+        resolve();
+      });
+
+      fileStream.on("error", (err: Error) => {
+        // Ignore cleanup errors
+        try {
+          fs.unlinkSync(outputPath);
+        } catch {}
+        reject(err);
+      });
+    });
+
+    request.on("error", reject);
+    request.setTimeout(15000, () => {
+      request.destroy();
+      reject(new Error("Timeout"));
+    });
+
+    request.end();
+  });
 }
 
 // Generate a temporary Root file with the generated script
@@ -173,8 +197,8 @@ registerRoot(RemotionRoot);
   const rootPath = path.join(process.cwd(), "src", "root.generated.tsx");
   const indexPath = path.join(process.cwd(), "src", "index.generated.ts");
 
-  await fs.writeFile(rootPath, rootTemplate);
-  await fs.writeFile(indexPath, indexTemplate);
+  fs.writeFileSync(rootPath, rootTemplate);
+  fs.writeFileSync(indexPath, indexTemplate);
 
   return { rootPath, indexPath };
 }
@@ -182,10 +206,10 @@ registerRoot(RemotionRoot);
 // Clean up temporary files
 async function cleanup(rootPath: string, indexPath: string) {
   try {
-    await fs.unlink(rootPath);
+    fs.unlinkSync(rootPath);
   } catch {}
   try {
-    await fs.unlink(indexPath);
+    fs.unlinkSync(indexPath);
   } catch {}
 }
 

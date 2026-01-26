@@ -53,18 +53,26 @@ async function searchTopic(topic: string): Promise<string[]> {
 
   // For demonstration, we'll use a web fetch approach
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
       topic
     )}&format=json&origin=*`;
 
-    const response = await fetch(searchUrl);
+    const response = await fetch(searchUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await response.json();
 
     if (data.query?.search) {
       return data.query.search.map((result: any) => result.snippet);
     }
-  } catch (error) {
-    console.error("Search error:", error);
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.log("   Wikipedia search timed out, using template");
+    } else {
+      console.error("   Search unavailable, using template");
+    }
   }
 
   return [];

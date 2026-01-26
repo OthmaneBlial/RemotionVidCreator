@@ -1,7 +1,9 @@
 import { staticFile } from "remotion";
 import path from "path";
-import fs from "fs/promises";
+import fs from "fs";
+import fsPromises from "fs/promises";
 import https from "https";
+import http from "http";
 
 export interface FetchedImage {
   url: string;
@@ -13,36 +15,28 @@ export interface FetchedImage {
 }
 
 /**
- * Fetch images from Unsplash source API (free, no key required)
- * Returns images related to the given topic
+ * Fetch images from Lorem Picsum (picsum.photos)
+ * Free, reliable, no API key required - redirects to actual Unsplash photos
  */
-export async function fetchUnsplashImages(
+export async function fetchLoremPicsumImages(
   topic: string,
-  count = 5
+  count = 5,
+  width = 1080,
+  height = 1920
 ): Promise<FetchedImage[]> {
   const imagesDir = path.join(process.cwd(), "public", "images");
-  await fs.mkdir(imagesDir, { recursive: true });
+  await fsPromises.mkdir(imagesDir, { recursive: true });
 
   const sanitizedTopic = topic.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   const images: FetchedImage[] = [];
 
-  // Unsplash Source API - free, no authentication required
-  const baseUrl = "https://source.unsplash.com";
+  // Lorem Picsum uses random seeds - we use timestamp for variety
+  const seed = Date.now();
 
   for (let i = 0; i < count; i++) {
     try {
-      // Use different dimensions for variety
-      const dimensions = [
-        { w: 1080, h: 1920 },
-        { w: 1080, h: 1350 },
-        { w: 1080, h: 1600 },
-      ][i % 3];
-
-      // Create image URL with timestamp to avoid caching
-      const timestamp = Date.now() + i * 1000;
-      const imageUrl = `${baseUrl}/${dimensions.w}x${dimensions.h}/?${encodeURIComponent(
-        topic
-      )}&t=${timestamp}`;
+      // Lorem Picsum URL - each seed gives a consistent random image
+      const imageUrl = `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/${width}/${height}`;
 
       const filename = `${sanitizedTopic}-${i}.jpg`;
       const localPath = path.join(imagesDir, filename);
@@ -53,8 +47,8 @@ export async function fetchUnsplashImages(
       images.push({
         url: staticFile(`images/${filename}`),
         localPath,
-        width: dimensions.w,
-        height: dimensions.h,
+        width,
+        height,
       });
     } catch (error) {
       console.error(`Failed to fetch image ${i}:`, error);
@@ -65,17 +59,104 @@ export async function fetchUnsplashImages(
 }
 
 /**
+ * Fetch images from multiple free sources (fallback chain)
+ * Tries Lorem Picsum first, then other free sources
+ */
+export async function fetchFreeImages(
+  topic: string,
+  count = 5,
+  width = 1080,
+  height = 1920
+): Promise<FetchedImage[]> {
+  console.log(`🖼️  Fetching ${count} images...`);
+
+  const imagesDir = path.join(process.cwd(), "public", "images");
+  await fsPromises.mkdir(imagesDir, { recursive: true });
+
+  const sanitizedTopic = topic.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const images: FetchedImage[] = [];
+  const seed = Date.now();
+
+  // Image sources to try (in order)
+  const sources = [
+    {
+      name: "Lorem Picsum",
+      getUrl: (i: number) => `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/${width}/${height}`,
+    },
+    {
+      name: "Picsum Random",
+      getUrl: (i: number) => `https://picsum.photos/${width}/${height}?random=${seed + i}`,
+    },
+    {
+      name: "LoremFlickr",
+      getUrl: (i: number) => `https://loremflickr.com/${width}/${height}/${sanitizedTopic}?lock=${seed + i}`,
+    },
+  ];
+
+  let sourceIndex = 0;
+
+  while (images.length < count && sourceIndex < sources.length) {
+    const source = sources[sourceIndex];
+    const needed = count - images.length;
+
+    console.log(`   Trying ${source.name}...`);
+
+    for (let i = 0; i < needed; i++) {
+      const imageIndex = images.length;
+      try {
+        const imageUrl = source.getUrl(imageIndex);
+        const filename = `${sanitizedTopic}-${imageIndex}.jpg`;
+        const localPath = path.join(imagesDir, filename);
+
+        await downloadImage(imageUrl, localPath, 15000); // 15 second timeout
+
+        images.push({
+          url: staticFile(`images/${filename}`),
+          localPath,
+          width,
+          height,
+        });
+
+        process.stdout.write(`\r   Fetched: ${images.length}/${count} images`);
+      } catch (error) {
+        console.error(`\n   ${source.name} failed for image ${imageIndex}`);
+        break; // Try next source
+      }
+    }
+
+    sourceIndex++;
+  }
+
+  process.stdout.write(`\r   Fetched: ${images.length}/${count} images\n`);
+
+  return images;
+}
+
+// Keep backward compatibility
+export const fetchUnsplashImages = fetchFreeImages;
+
+/**
  * Download an image from URL to local path
  */
-function downloadImage(url: string, outputPath: string): Promise<void> {
+function downloadImage(
+  url: string,
+  outputPath: string,
+  timeout = 30000
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Unsplash source redirects to actual image, so we need to follow redirects
-    const request = https.get(url, (response) => {
+    const protocol = url.startsWith("https") ? https : http;
+
+    const request = protocol.get(url, (response) => {
       // Handle redirects
-      if (response.statusCode === 301 || response.statusCode === 302) {
+      if (
+        response.statusCode === 301 ||
+        response.statusCode === 302 ||
+        response.statusCode === 307 ||
+        response.statusCode === 308
+      ) {
         const redirectUrl = response.headers.location;
         if (redirectUrl) {
-          downloadImage(redirectUrl, outputPath).then(resolve).catch(reject);
+          downloadImage(redirectUrl, outputPath, timeout).then(resolve).catch(reject);
           return;
         }
       }
@@ -85,7 +166,7 @@ function downloadImage(url: string, outputPath: string): Promise<void> {
         return;
       }
 
-      const fileStream = require("fs").createWriteStream(outputPath);
+      const fileStream = fs.createWriteStream(outputPath);
       response.pipe(fileStream);
 
       fileStream.on("finish", () => {
@@ -94,12 +175,13 @@ function downloadImage(url: string, outputPath: string): Promise<void> {
       });
 
       fileStream.on("error", (err: Error) => {
+        fsPromises.unlink(outputPath).catch(() => {});
         reject(err);
       });
     });
 
     request.on("error", reject);
-    request.setTimeout(30000, () => {
+    request.setTimeout(timeout, () => {
       request.destroy();
       reject(new Error("Timeout"));
     });
@@ -141,7 +223,6 @@ export function getImageKeywords(topic: string, sectionTitle?: string): string[]
  * Get a fallback/gradients image if image fetching fails
  */
 export function getGradientImage(color1: string, color2: string): string {
-  // Return a data URL with gradient
   const svg = `
     <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
       <defs>
