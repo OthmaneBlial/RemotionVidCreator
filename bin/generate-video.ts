@@ -17,10 +17,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import https from "https";
 import http from "http";
-
-// Dynamic imports for CommonJS modules
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
+import { readFile } from "fs/promises";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,8 +98,13 @@ async function fetchVideoImages(topic: string, script: any, count = 10) {
       // Download the image
       await downloadImageDirect(imageUrl, localPath);
 
+      // Convert to base64 data URL for Remotion (most reliable method)
+      const imageBuffer = await readFile(localPath);
+      const base64 = imageBuffer.toString("base64");
+      const dataUrl = `data:image/jpeg;base64,${base64}`;
+
       images.push({
-        src: `/images/${filename}`, // Use relative path for Remotion
+        src: dataUrl,
         alt: `${topic}-${i}`,
       });
 
