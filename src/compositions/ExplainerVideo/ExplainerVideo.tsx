@@ -37,6 +37,8 @@ export const ExplainerVideo = ({
   colorScheme = "default",
   accentColor,
   images = [],
+  aspectRatio = "9:16",
+  fontSizeScale = 1,
 }: ExplainerVideoProps) => {
   const { fps } = useVideoConfig();
 
@@ -87,6 +89,7 @@ export const ExplainerVideo = ({
             title={script.title}
             accentColor={effectiveAccent}
             images={images.slice(0, 3)}
+            fontSizeScale={fontSizeScale}
           />
         </Series.Sequence>
 
@@ -95,6 +98,7 @@ export const ExplainerVideo = ({
           <HookSection
             hook={script.hook}
             accentColor={effectiveAccent}
+            fontSizeScale={fontSizeScale}
           />
         </Series.Sequence>
 
@@ -111,6 +115,7 @@ export const ExplainerVideo = ({
               accentColor={effectiveAccent}
               images={images.slice(3 + index * 2, 6 + index * 2)}
               index={index}
+              fontSizeScale={fontSizeScale}
             />
           </Series.Sequence>
         ))}
@@ -121,6 +126,7 @@ export const ExplainerVideo = ({
             outro={script.outro}
             accentColor={effectiveAccent}
             title={script.title}
+            fontSizeScale={fontSizeScale}
           />
         </Series.Sequence>
       </Series>
@@ -146,9 +152,10 @@ interface DramaticIntroProps {
   title: string;
   accentColor: string;
   images: Array<{ src: string; alt?: string }>;
+  fontSizeScale: number;
 }
 
-const DramaticIntro = ({ title, accentColor, images }: DramaticIntroProps) => {
+const DramaticIntro = ({ title, accentColor, images, fontSizeScale }: DramaticIntroProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -200,7 +207,7 @@ const DramaticIntro = ({ title, accentColor, images }: DramaticIntroProps) => {
           <h1
             style={{
               fontFamily: "CalSans, sans-serif",
-              fontSize: "80px",
+              fontSize: `${80 * fontSizeScale}px`,
               fontWeight: 700,
               color: "#ffffff",
               textAlign: "center",
@@ -220,10 +227,10 @@ const DramaticIntro = ({ title, accentColor, images }: DramaticIntroProps) => {
           {/* Decorative bottom line */}
           <div
             style={{
-              width: interpolate(frame, [60, 90], [0, 120], { extrapolateRight: "clamp" }),
+              width: interpolate(frame, [60, 90], [0, 120 * fontSizeScale], { extrapolateRight: "clamp" }),
               height: "4px",
               background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
-              marginTop: "32px",
+              marginTop: `${32 * fontSizeScale}px`,
               borderRadius: "2px",
               boxShadow: `0 0 30px ${accentColor}`,
             }}
@@ -233,11 +240,11 @@ const DramaticIntro = ({ title, accentColor, images }: DramaticIntroProps) => {
           <p
             style={{
               fontFamily: "Inter, sans-serif",
-              fontSize: "24px",
+              fontSize: `${24 * fontSizeScale}px`,
               fontWeight: 400,
               color: `${accentColor}cc`,
               textAlign: "center",
-              marginTop: "40px",
+              marginTop: `${40 * fontSizeScale}px`,
               opacity: interpolate(frame, [60, 90], [0, 1], { extrapolateRight: "clamp" }),
               letterSpacing: "4px",
               textTransform: "uppercase",
@@ -260,9 +267,10 @@ const DramaticIntro = ({ title, accentColor, images }: DramaticIntroProps) => {
 interface HookSectionProps {
   hook: string;
   accentColor: string;
+  fontSizeScale: number;
 }
 
-const HookSection = ({ hook, accentColor }: HookSectionProps) => {
+const HookSection = ({ hook, accentColor, fontSizeScale }: HookSectionProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -321,7 +329,7 @@ const HookSection = ({ hook, accentColor }: HookSectionProps) => {
               key={i}
               style={{
                 fontFamily: "Inter, sans-serif",
-                fontSize: "42px",
+                fontSize: `${42 * fontSizeScale}px`,
                 fontWeight: 600,
                 color: "#ffffff",
                 opacity,
@@ -348,6 +356,7 @@ interface SectionWithImageProps {
   accentColor: string;
   images: Array<{ src: string; alt?: string }>;
   index: number;
+  fontSizeScale: number;
 }
 
 const SectionWithImage = ({
@@ -357,6 +366,7 @@ const SectionWithImage = ({
   accentColor,
   images,
   index,
+  fontSizeScale,
 }: SectionWithImageProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -391,15 +401,15 @@ const SectionWithImage = ({
       <div
         style={{
           position: "absolute",
-          top: 200,
-          left: 80,
+          top: 200 * fontSizeScale,
+          left: 80 * fontSizeScale,
           opacity: sectionNumberOpacity,
         }}
       >
         <span
           style={{
             fontFamily: "CalSans, sans-serif",
-            fontSize: "180px",
+            fontSize: `${180 * fontSizeScale}px`,
             fontWeight: 800,
             color: accentColor,
             lineHeight: 1,
@@ -416,7 +426,7 @@ const SectionWithImage = ({
         style={{
           alignItems: "center",
           justifyContent: "center",
-          padding: "80px",
+          padding: `${80 * fontSizeScale}px`,
         }}
       >
         {/* Section Title */}
@@ -432,20 +442,20 @@ const SectionWithImage = ({
                 ? interpolate(frame, [0, 20], [40, 0], { extrapolateRight: "clamp" })
                 : 0
             }px)`,
-            marginBottom: "40px",
+            marginBottom: `${40 * fontSizeScale}px`,
             transition: "opacity 0.5s",
           }}
         >
           <h2
             style={{
               fontFamily: "CalSans, sans-serif",
-              fontSize: "64px",
+              fontSize: `${64 * fontSizeScale}px`,
               fontWeight: 700,
               color: "#ffffff",
               textAlign: "center",
               maxWidth: "900px",
               lineHeight: 1.2,
-              marginBottom: "24px",
+              marginBottom: `${24 * fontSizeScale}px`,
               textShadow: `0 4px 60px rgba(0,0,0,0.5)`,
             }}
           >
@@ -453,7 +463,7 @@ const SectionWithImage = ({
           </h2>
           <div
             style={{
-              width: "100px",
+              width: `${100 * fontSizeScale}px`,
               height: "4px",
               background: accentColor,
               margin: "0 auto",
@@ -487,7 +497,7 @@ const SectionWithImage = ({
             <p
               style={{
                 fontFamily: "Inter, sans-serif",
-                fontSize: "38px",
+                fontSize: `${38 * fontSizeScale}px`,
                 fontWeight: 400,
                 color: "#ffffffee",
                 textAlign: "center",
@@ -537,9 +547,10 @@ interface DramaticOutroProps {
   outro: string;
   accentColor: string;
   title: string;
+  fontSizeScale: number;
 }
 
-const DramaticOutro = ({ outro, accentColor, title }: DramaticOutroProps) => {
+const DramaticOutro = ({ outro, accentColor, title, fontSizeScale }: DramaticOutroProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -562,20 +573,20 @@ const DramaticOutro = ({ outro, accentColor, title }: DramaticOutroProps) => {
         style={{
           alignItems: "center",
           justifyContent: "center",
-          padding: "80px",
+          padding: `${80 * fontSizeScale}px`,
         }}
       >
         {/* Topic reminder */}
         <div
           style={{
             opacity: interpolate(frame, [0, 30], [0, 0.4], { extrapolateRight: "clamp" }),
-            marginBottom: "60px",
+            marginBottom: `${60 * fontSizeScale}px`,
           }}
         >
           <p
             style={{
               fontFamily: "Inter, sans-serif",
-              fontSize: "20px",
+              fontSize: `${20 * fontSizeScale}px`,
               fontWeight: 500,
               color: accentColor,
               textAlign: "center",
@@ -599,7 +610,7 @@ const DramaticOutro = ({ outro, accentColor, title }: DramaticOutroProps) => {
           <p
             style={{
               fontFamily: "CalSans, sans-serif",
-              fontSize: "56px",
+              fontSize: `${56 * fontSizeScale}px`,
               fontWeight: 600,
               color: "#ffffff",
               textAlign: "center",
@@ -616,12 +627,12 @@ const DramaticOutro = ({ outro, accentColor, title }: DramaticOutroProps) => {
         <div
           style={{
             opacity: interpolate(frame, [90, 120], [0, 1], { extrapolateRight: "clamp" }),
-            marginTop: "80px",
+            marginTop: `${80 * fontSizeScale}px`,
           }}
         >
           <div
             style={{
-              padding: "20px 50px",
+              padding: `${20 * fontSizeScale}px ${50 * fontSizeScale}px`,
               border: `2px solid ${accentColor}`,
               borderRadius: "50px",
               background: `${accentColor}15`,
@@ -631,7 +642,7 @@ const DramaticOutro = ({ outro, accentColor, title }: DramaticOutroProps) => {
             <p
               style={{
                 fontFamily: "Inter, sans-serif",
-                fontSize: "24px",
+                fontSize: `${24 * fontSizeScale}px`,
                 fontWeight: 600,
                 color: "#ffffff",
                 textAlign: "center",

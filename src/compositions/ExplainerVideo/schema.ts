@@ -28,7 +28,10 @@ export const ExplainerVideoSchema = z.object({
   colorScheme: z.enum(["default", "warm", "cool", "dark"]).optional(),
   accentColor: z.string().optional(),
   images: z.array(SlideImageSchema).optional(),
+  aspectRatio: z.enum(["9:16", "16:9", "1:1", "4:5", "4:3"]).optional(),
+  fontSizeScale: z.number().optional(),
 });
 
 export type ExplainerVideoProps = z.infer<typeof ExplainerVideoSchema>;
 export type SlideImage = z.infer<typeof SlideImageSchema>;
+export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5" | "4:3";

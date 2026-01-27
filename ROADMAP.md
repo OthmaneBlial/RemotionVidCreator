@@ -51,7 +51,7 @@ npm run generate -- "AI" --use-ai
 ## 🔴 P0 - Critical Features
 
 ### 1. Aspect Ratio Presets ✅
-**Status:** 📋 Todo | **Difficulty:** Easy | **Impact:** High
+**Status:** ✅ Done | **Difficulty:** Easy | **Impact:** High
 
 Support multiple aspect ratios for different platforms:
 - `--aspect 9:16` (default) - TikTok, Reels, Shorts
@@ -60,10 +60,17 @@ Support multiple aspect ratios for different platforms:
 - `--aspect 4:5` - Instagram portrait
 - `--aspect 4:3` - standard display
 
+**Usage:**
+```bash
+npm run generate -- "AI" --aspect 16:9
+npm run generate -- "Tech" --aspect 1:1 --use-ai
+```
+
 **Implementation:**
-- Add CLI argument parsing
-- Update composition dimensions dynamically
-- Adjust font sizes and layouts per ratio
+- CLI argument parsing with validation
+- Dynamic composition dimensions per preset
+- Font size scaling per aspect ratio
+- Image fetching with correct dimensions
 
 ---
 
@@ -682,11 +689,11 @@ Multiple users working together:
 
 ## 📊 Progress Tracking
 
-### Overall Progress: 1/40 (2.5%)
+### Overall Progress: 2/40 (5%)
 
 | Priority | Done | Total | Percent |
 |----------|------|-------|---------|
-| P0 - Critical | 1 | 5 | 20% |
+| P0 - Critical | 2 | 5 | 40% |
 | P1 - High | 0 | 8 | 0% |
 | P2 - Medium | 0 | 10 | 0% |
 | P3 - Low | 0 | 17 | 0% |
@@ -712,6 +719,14 @@ Multiple users working together:
 ---
 
 ## 📝 Changelog
+
+### 2026-01-27
+- **✅ Completed: Aspect Ratio Presets**
+  - Added --aspect CLI flag
+  - Support for 9:16, 16:9, 1:1, 4:5, 4:3 ratios
+  - Dynamic composition dimensions
+  - Font size scaling per ratio
+  - Correct image dimensions per preset
 
 ### 2026-01-26
 - **✅ Completed: AI Script Generation with Claude**

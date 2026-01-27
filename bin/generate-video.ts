@@ -25,12 +25,31 @@ const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
 
+// Aspect ratio presets
+type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5" | "4:3";
+
+interface AspectRatioPreset {
+  width: number;
+  height: number;
+  description: string;
+  fontSizeScale: number;
+}
+
+const aspectRatioPresets: Record<AspectRatio, AspectRatioPreset> = {
+  "9:16": { width: 1080, height: 1920, description: "TikTok, Reels, Shorts", fontSizeScale: 1 },
+  "16:9": { width: 1920, height: 1080, description: "YouTube, standard video", fontSizeScale: 1.3 },
+  "1:1": { width: 1080, height: 1080, description: "Instagram posts", fontSizeScale: 1.2 },
+  "4:5": { width: 1080, height: 1350, description: "Instagram portrait", fontSizeScale: 1.1 },
+  "4:3": { width: 1440, height: 1080, description: "Standard display", fontSizeScale: 1.25 },
+};
+
 // Parse CLI arguments
 function parseArgs(cliArgs: string[]): {
   topic: string;
   options: GenerateScriptOptions;
   outputPath: string;
   fetchImages: boolean;
+  aspectRatio: AspectRatio;
 } {
   const topic = cliArgs[0];
 
@@ -40,20 +59,29 @@ function parseArgs(cliArgs: string[]): {
     console.log("\nOptions:");
     console.log("  --tone <informative|casual|professional|dramatic|humorous|storytelling>");
     console.log("  --complexity <simple|medium|detailed>");
+    console.log("  --aspect <9:16|16:9|1:1|4:5|4:3>  Aspect ratio (default: 9:16)");
     console.log("  --output <path>");
     console.log("  --no-images    Skip fetching images");
     console.log("  --use-ai       Use Claude AI for script generation");
+    console.log("\nAspect Ratios:");
+    console.log("  9:16   Vertical video (TikTok, Reels, Shorts)");
+    console.log("  16:9   Horizontal video (YouTube, standard)");
+    console.log("  1:1    Square video (Instagram posts)");
+    console.log("  4:5    Portrait (Instagram)");
+    console.log("  4:3    Standard display");
     console.log("\nEnvironment Variables:");
     console.log("  ANTHROPIC_API_KEY    Your Anthropic API key for Claude AI");
     console.log("\nExamples:");
     console.log("  npm run generate -- \"AI\" --use-ai");
-    console.log("  npm run generate -- \"Space\" --tone storytelling --use-ai");
+    console.log("  npm run generate -- \"Space\" --tone storytelling --aspect 16:9");
+    console.log("  npm run generate -- \"Tech\" --aspect 1:1 --use-ai");
     process.exit(1);
   }
 
   const options: GenerateScriptOptions = { topic };
   let outputPath = path.join(process.cwd(), "output", `${topic.replace(/\s+/g, "-").toLowerCase()}.mp4`);
   let fetchImages = true;
+  let aspectRatio: AspectRatio = "9:16"; // Default
 
   for (let i = 1; i < cliArgs.length; i++) {
     const arg = cliArgs[i];
@@ -63,6 +91,16 @@ function parseArgs(cliArgs: string[]): {
         break;
       case "--complexity":
         options.complexity = cliArgs[++i] as any;
+        break;
+      case "--aspect":
+        const ratio = cliArgs[++i] as AspectRatio;
+        if (ratio in aspectRatioPresets) {
+          aspectRatio = ratio;
+        } else {
+          console.error(`❌ Error: Invalid aspect ratio "${ratio}"`);
+          console.error(`   Valid options: ${Object.keys(aspectRatioPresets).join(", ")}`);
+          process.exit(1);
+        }
         break;
       case "--output":
         outputPath = cliArgs[++i];
@@ -78,7 +116,7 @@ function parseArgs(cliArgs: string[]): {
     }
   }
 
-  return { topic, options, outputPath, fetchImages };
+  return { topic, options, outputPath, fetchImages, aspectRatio };
 }
 
 // Create output directory if it doesn't exist
@@ -88,8 +126,9 @@ async function ensureOutputDir(filePath: string) {
 }
 
 // Fetch images for the video (PARALLEL - 10x faster)
-async function fetchVideoImages(topic: string, script: any, count = 10) {
-  console.log("\n🖼️  Fetching images from Lorem Picsum (parallel)...");
+async function fetchVideoImages(topic: string, script: any, aspectRatio: AspectRatio, count = 10) {
+  const preset = aspectRatioPresets[aspectRatio];
+  console.log(`\n🖼️  Fetching images from Lorem Picsum (${preset.width}x${preset.height})...`);
 
   const imagesDir = path.join(process.cwd(), "public", "images");
   fs.mkdirSync(imagesDir, { recursive: true });
@@ -100,7 +139,7 @@ async function fetchVideoImages(topic: string, script: any, count = 10) {
 
   // PARALLEL: Fetch all images concurrently using Promise.all
   const fetchPromises = Array.from({ length: count }, async (_, i) => {
-    const imageUrl = `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/1080/1920`;
+    const imageUrl = `https://picsum.photos/seed/${sanitizedTopic}-${seed}-${i}/${preset.width}/${preset.height}`;
     const filename = `${sanitizedTopic}-${i}.jpg`;
     const localPath = path.join(imagesDir, filename);
 
@@ -207,7 +246,8 @@ function downloadImageDirect(url: string, outputPath: string): Promise<void> {
 }
 
 // Generate a temporary Root file with the generated script
-async function createTempRoot(script: any, images: any[]) {
+async function createTempRoot(script: any, images: any[], aspectRatio: AspectRatio) {
+  const preset = aspectRatioPresets[aspectRatio];
   const rootTemplate = `import { Composition } from "remotion";
 import { ExplainerVideo } from "./compositions/ExplainerVideo";
 import { ExplainerVideoSchema } from "./compositions/ExplainerVideo/schema";
@@ -223,11 +263,13 @@ export const RemotionRoot = () => {
         script: ${JSON.stringify(script)},
         images: ${JSON.stringify(images)},
         colorScheme: "default",
+        aspectRatio: "${aspectRatio}",
+        fontSizeScale: ${preset.fontSizeScale},
       }}
       durationInFrames={900}
       fps={30}
-      width={1080}
-      height={1920}
+      width={${preset.width}}
+      height={${preset.height}}
     />
   );
 };
@@ -263,7 +305,8 @@ async function main() {
   console.log("🎬 Remotion Explainer Video Generator\n");
   console.log("   ════════════════════════════════════\n");
 
-  const { topic, options, outputPath, fetchImages } = parseArgs(args);
+  const { topic, options, outputPath, fetchImages, aspectRatio } = parseArgs(args);
+  const preset = aspectRatioPresets[aspectRatio];
 
   console.log(`📚 Topic:    ${topic}`);
   console.log(`🎭 Tone:     ${options.tone || "informative"}`);
@@ -272,7 +315,9 @@ async function main() {
     ? (options.apiKey ? "Yes (Claude API)" : "Yes (Demo Mode)")
     : "No (Template)";
   console.log(`🤖 AI:       ${aiMode}`);
-  console.log(`🖼️  Images:   ${fetchImages ? "Yes (Lorem Picsum)" : "No"}`);
+  console.log(`📐 Ratio:    ${aspectRatio} (${preset.description})`);
+  console.log(`📐 Size:     ${preset.width}x${preset.height}`);
+  console.log(`🖼️  Images:   ${fetchImages ? `Yes (${preset.width}x${preset.height})` : "No"}`);
   console.log(`📁 Output:   ${outputPath}\n`);
 
   // Generate script
@@ -288,14 +333,14 @@ async function main() {
   // Fetch images
   let images: any[] = [];
   if (fetchImages) {
-    images = await fetchVideoImages(topic, script, 10);
+    images = await fetchVideoImages(topic, script, aspectRatio, 10);
   }
 
   // Ensure output directory exists
   await ensureOutputDir(outputPath);
 
   // Create temporary Root with generated script
-  const { rootPath, indexPath } = await createTempRoot(script, images);
+  const { rootPath, indexPath } = await createTempRoot(script, images, aspectRatio);
 
   try {
     // Bundle the Remotion project
