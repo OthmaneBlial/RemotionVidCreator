@@ -5,6 +5,7 @@ Generate engaging explainer videos from any topic using Remotion. The system res
 ## Features
 
 - **Auto-generated scripts**: Researches topics and structures content into hooks, sections, and outros
+- **AI mode**: A local browser-based generator that accepts a topic and target duration, then runs research in the background
 - **Multiple tones**: informative, casual, professional, or dramatic
 - **Animated components**: Smooth transitions, text animations, and progress indicators
 - **Customizable**: Color schemes, timing, and content styles
@@ -19,6 +20,9 @@ npm install
 # Start Remotion Studio (preview mode)
 npm start
 
+# Start AI mode
+npm run ai
+
 # Generate a video
 npm run generate "The Future of AI"
 ```
@@ -30,6 +34,19 @@ npm run generate "The Future of AI"
 ```bash
 npm run generate "your topic here"
 ```
+
+### AI mode
+
+```bash
+npm run ai
+```
+
+The AI mode opens a local page with one generate button, a duration input, and a live progress bar. It:
+
+- Uses Z.ai through the Anthropic-compatible `messages` API
+- Uses Unsplash for topic-aware images with a hard 50-requests/hour server limit
+- Generates an ambient audio bed
+- Renders the final video in the background
 
 ### With options
 
@@ -44,6 +61,15 @@ npm run generate "your topic" --tone casual --complexity simple
 | `--tone` | `informative`, `casual`, `professional`, `dramatic` | Sets the video tone |
 | `--complexity` | `simple`, `medium`, `detailed` | Content depth |
 | `--output` | filepath | Custom output path |
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `ZAI_API_KEY` | Z.ai API key used for script generation |
+| `ZAI_BASE_URL` | Optional override for the Anthropic-compatible base URL |
+| `ZAI_MODEL` | Optional model name, defaults to `claude-sonnet-4-20250514` |
+| `UNSPLASH_ACCESS_KEY` | Unsplash access key used for image search |
 
 ## Examples
 

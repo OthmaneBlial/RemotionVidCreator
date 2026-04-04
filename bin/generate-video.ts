@@ -10,6 +10,7 @@
  *   npm run generate -- "topic name" --use-ai
  */
 
+import "../src/utils/load-env.js";
 import { generateScript, type GenerateScriptOptions } from "../src/utils/generate-script.js";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
@@ -62,7 +63,7 @@ function parseArgs(cliArgs: string[]): {
     console.log("  --aspect <9:16|16:9|1:1|4:5|4:3>  Aspect ratio (default: 9:16)");
     console.log("  --output <path>");
     console.log("  --no-images    Skip fetching images");
-    console.log("  --use-ai       Use Claude AI for script generation");
+    console.log("  --use-ai       Use Z.ai for script generation");
     console.log("\nAspect Ratios:");
     console.log("  9:16   Vertical video (TikTok, Reels, Shorts)");
     console.log("  16:9   Horizontal video (YouTube, standard)");
@@ -70,7 +71,9 @@ function parseArgs(cliArgs: string[]): {
     console.log("  4:5    Portrait (Instagram)");
     console.log("  4:3    Standard display");
     console.log("\nEnvironment Variables:");
-    console.log("  ANTHROPIC_API_KEY    Your Anthropic API key for Claude AI");
+    console.log("  ZAI_API_KEY          Your Z.ai API key");
+    console.log("  ZAI_BASE_URL         Optional Anthropic-compatible base URL");
+    console.log("  ZAI_MODEL            Optional model name");
     console.log("\nExamples:");
     console.log("  npm run generate -- \"AI\" --use-ai");
     console.log("  npm run generate -- \"Space\" --tone storytelling --aspect 16:9");
@@ -110,7 +113,7 @@ function parseArgs(cliArgs: string[]): {
         break;
       case "--use-ai":
         options.useAI = true;
-        options.apiKey = process.env.ANTHROPIC_API_KEY || undefined;
+        options.apiKey = process.env.ZAI_API_KEY || process.env.ANTHROPIC_API_KEY || undefined;
         // No longer require API key - demo mode will be used if not provided
         break;
     }
@@ -312,7 +315,7 @@ async function main() {
   console.log(`🎭 Tone:     ${options.tone || "informative"}`);
   console.log(`📊 Level:    ${options.complexity || "medium"}`);
   const aiMode = options.useAI
-    ? (options.apiKey ? "Yes (Claude API)" : "Yes (Demo Mode)")
+    ? (options.apiKey ? "Yes (Z.ai)" : "Yes (Demo Mode)")
     : "No (Template)";
   console.log(`🤖 AI:       ${aiMode}`);
   console.log(`📐 Ratio:    ${aspectRatio} (${preset.description})`);

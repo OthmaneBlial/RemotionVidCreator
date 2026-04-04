@@ -37,6 +37,8 @@ export const ExplainerVideo = ({
   colorScheme = "default",
   accentColor,
   images = [],
+  audio,
+  targetDurationSeconds,
   aspectRatio = "9:16",
   fontSizeScale = 1,
 }: ExplainerVideoProps) => {
@@ -46,15 +48,44 @@ export const ExplainerVideo = ({
   const primaryColor = script.primaryColor || "#0f172a";
   const effectiveAccent = accentColor || script.accentColor || "#38bdf8";
 
-  // Timing for each section (in frames) - longer for more visual impact
-  const introDuration = 5 * fps; // 5 seconds
-  const hookDuration = 6 * fps; // 6 seconds
-  const sectionTitleDuration = 3 * fps; // 3 seconds per section title
-  const sectionContentDuration = 7 * fps; // 7 seconds per section content
-  const outroDuration = 6 * fps; // 6 seconds
+  // Timing for each section (in frames) - scaled to the requested duration when provided
+  const defaultIntroDuration = 5 * fps;
+  const defaultHookDuration = 6 * fps;
+  const defaultSectionTitleDuration = 3 * fps;
+  const defaultSectionContentDuration = 7 * fps;
+  const defaultOutroDuration = 6 * fps;
+
+  const defaultDurationFrames =
+    defaultIntroDuration +
+    defaultHookDuration +
+    script.sections.length * (defaultSectionTitleDuration + defaultSectionContentDuration) +
+    defaultOutroDuration;
+
+  const requestedDurationFrames = targetDurationSeconds ? targetDurationSeconds * fps : defaultDurationFrames;
+  const timingScale = requestedDurationFrames / defaultDurationFrames;
+
+  const scaleFrames = (frames: number) => Math.max(1, Math.round(frames * timingScale));
+
+  const introDuration = scaleFrames(defaultIntroDuration);
+  const hookDuration = scaleFrames(defaultHookDuration);
+  const sectionTitleDuration = scaleFrames(defaultSectionTitleDuration);
+  const sectionContentDuration = scaleFrames(defaultSectionContentDuration);
+  const outroDuration = targetDurationSeconds
+    ? Math.max(
+        1,
+        Math.round(
+          requestedDurationFrames -
+            (introDuration +
+              hookDuration +
+              script.sections.length * (sectionTitleDuration + sectionContentDuration))
+        )
+      )
+    : scaleFrames(defaultOutroDuration);
 
   return (
     <AbsoluteFill>
+      {audio?.src ? <Audio src={audio.src} volume={audio.volume ?? 0.55} /> : null}
+
       {/* Dynamic Background */}
       <GradientMesh
         colors={[primaryColor, "#1e293b", "#334155"]}
@@ -667,7 +698,6 @@ export const calculateMetadata: CalculateMetadataFunction<ExplainerVideoProps> =
 }) => {
   const fps = 30;
 
-  // Calculate duration based on script length with enhanced timing
   const introDuration = 5 * fps;
   const hookDuration = 6 * fps;
   const sectionTitleDuration = 3 * fps;
@@ -675,13 +705,15 @@ export const calculateMetadata: CalculateMetadataFunction<ExplainerVideoProps> =
   const outroDuration = 6 * fps;
 
   const sectionCount = props.script.sections.length;
-  const totalDuration =
+  const defaultDuration =
     introDuration +
     hookDuration +
     sectionCount * (sectionTitleDuration + sectionContentDuration) +
     outroDuration;
 
   return {
-    durationInFrames: totalDuration,
+    durationInFrames: props.targetDurationSeconds
+      ? Math.max(1, Math.round(props.targetDurationSeconds * fps))
+      : defaultDuration,
   };
 };

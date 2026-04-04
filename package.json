@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "remotion studio",
+    "ai": "tsx bin/ai-mode.ts",
     "build": "remotion render",
     "generate": "tsx bin/generate-video.ts",
     "typecheck": "tsc --noEmit"

@@ -1,3 +1,5 @@
+import "./load-env.js";
+
 export interface ScriptSection {
   title: string;
   content: string;
@@ -14,37 +16,55 @@ export interface ExplainerScript {
   accentColor?: string;
   // Main topic image keywords
   topicImages?: string[];
+  // Suggested background audio mood for the renderer
+  audioMood?: string;
+  // Approximate speaking time in seconds
+  estimatedDurationSeconds?: number;
 }
 
 export interface GenerateScriptOptions {
   topic: string;
   tone?: "informative" | "casual" | "professional" | "dramatic" | "humorous" | "storytelling";
   complexity?: "simple" | "medium" | "detailed";
+  targetDurationSeconds?: number;
   useAI?: boolean;
   apiKey?: string;
 }
 
 /**
  * Generate an explainer script for a given topic.
- * Uses Claude AI API when useAI is true, falls back to Wikipedia + template.
+ * Uses Z.ai's Anthropic-compatible API when useAI is true, falls back to Wikipedia + template.
  */
 export async function generateScript(
   options: GenerateScriptOptions
 ): Promise<ExplainerScript> {
-  const { topic, tone = "informative", complexity = "medium", useAI = false, apiKey } = options;
+  const {
+    topic,
+    tone = "informative",
+    complexity = "medium",
+    targetDurationSeconds,
+    useAI = false,
+    apiKey,
+  } = options;
 
   // Try AI generation if requested
   if (useAI) {
     try {
-      console.log("   🤖 Generating script with Claude AI...");
+      console.log("   🤖 Generating script with Z.ai...");
       // If no API key provided, use mock/demo mode
       if (!apiKey) {
         console.log("   🧪 Using DEMO mode (no API key)");
-        const script = await generateMockAIScript(topic, tone, complexity);
+        const script = await generateMockAIScript(topic, tone, complexity, targetDurationSeconds);
         console.log("   ✅ Demo script generated successfully");
         return script;
       }
-      const script = await generateAIScript(topic, tone, complexity, apiKey);
+      const script = await generateAIScript(
+        topic,
+        tone,
+        complexity,
+        apiKey,
+        targetDurationSeconds
+      );
       console.log("   ✅ AI script generated successfully");
       return script;
     } catch (error) {
@@ -69,12 +89,13 @@ export async function generateScript(
 
 /**
  * Generate mock AI script (demo mode without API key)
- * This simulates what Claude would return
+ * This simulates what Z.ai would return
  */
 async function generateMockAIScript(
   topic: string,
   tone: string,
-  complexity: string
+  complexity: string,
+  targetDurationSeconds?: number
 ): Promise<ExplainerScript> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -207,32 +228,39 @@ async function generateMockAIScript(
     outro: mockScript.outro,
     primaryColor,
     accentColor,
-    topicImages: generateImageKeywords(topic, "overview", "concept", "intro")
+    topicImages: generateImageKeywords(topic, "overview", "concept", "intro"),
+    audioMood: "Cinematic ambient pulse with subtle tension and forward motion",
+    estimatedDurationSeconds: targetDurationSeconds,
   };
 }
 
 /**
- * Generate script using Claude API
+ * Generate script using Z.ai's Anthropic-compatible API
  */
 async function generateAIScript(
   topic: string,
   tone: string,
   complexity: string,
-  apiKey: string
+  apiKey: string,
+  targetDurationSeconds?: number
 ): Promise<ExplainerScript> {
-  const prompt = buildAIPrompt(topic, tone, complexity);
+  const prompt = buildAIPrompt(topic, tone, complexity, targetDurationSeconds);
+  const baseUrl = process.env.ZAI_BASE_URL || "https://api.z.ai/api/anthropic";
+  const model = process.env.ZAI_MODEL || "claude-sonnet-4-20250514";
+  const maxTokens = targetDurationSeconds && targetDurationSeconds <= 10 ? 700 : 2200;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch(`${baseUrl.replace(/\/$/, "")}/v1/messages`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": apiKey,
+      "x-api-key": apiKey || process.env.ZAI_API_KEY || "",
       "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
     },
     body: JSON.stringify({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 4000,
+      model,
+      max_tokens: maxTokens,
+      temperature: 0.35,
+      system: "Return concise JSON only.",
       messages: [
         {
           role: "user",
@@ -244,7 +272,7 @@ async function generateAIScript(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Claude API error: ${response.status} - ${error}`);
+    throw new Error(`Z.ai API error: ${response.status} - ${error}`);
   }
 
   const data = await response.json();
@@ -256,7 +284,12 @@ async function generateAIScript(
 /**
  * Build the prompt for AI script generation
  */
-function buildAIPrompt(topic: string, tone: string, complexity: string): string {
+function buildAIPrompt(
+  topic: string,
+  tone: string,
+  complexity: string,
+  targetDurationSeconds?: number
+): string {
   const toneInstructions: Record<string, string> = {
     informative: "educational and clear, perfect for learning",
     casual: "conversational and friendly, like explaining to a friend",
@@ -279,7 +312,7 @@ Create an engaging explainer video script about: **${topic}**
 **Style Requirements:**
 - Tone: ${toneInstructions[tone] || toneInstructions.informative}
 - Complexity: ${complexityInstructions[complexity] || complexityInstructions.medium}
-- Duration: ~60-90 seconds of spoken content
+- Duration: ${targetDurationSeconds ? `about ${targetDurationSeconds} seconds` : "~60-90 seconds of spoken content"}
 - Format: Vertical 9:16 video (TikTok/Reels style)
 
 **Script Structure:**
@@ -296,6 +329,9 @@ Create an engaging explainer video script about: **${topic}**
 - Include specific examples when possible
 - Make it memorable and shareable
 - Avoid clichés unless used intentionally
+- Add a short audio mood line for a background bed
+- Add image keyword ideas for each section
+- If duration is very short, keep it extremely tight with one hook and one compact section
 
 **Response Format (JSON):**
 \`\`\`json
@@ -316,7 +352,9 @@ Create an engaging explainer video script about: **${topic}**
       "content": "Content here..."
     }
   ],
-  "outro": "Outro text here..."
+  "outro": "Outro text here...",
+  "audioMood": "One short line describing the background audio bed",
+  "estimatedDurationSeconds": ${targetDurationSeconds ?? 75}
 }
 \`\`\`
 
@@ -365,6 +403,8 @@ function parseAIResponse(content: string, topic: string, tone: string): Explaine
       primaryColor,
       accentColor,
       topicImages: generateImageKeywords(topic, "overview", "landscape", "intro"),
+      audioMood: parsed.audioMood || "Cinematic ambient pulse with subtle tension and forward motion",
+      estimatedDurationSeconds: parsed.estimatedDurationSeconds,
     };
   } catch (error) {
     console.error("Failed to parse AI response, falling back to template");
