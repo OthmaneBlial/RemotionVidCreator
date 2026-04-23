@@ -18,7 +18,17 @@ type JobPayload = {
   id: string;
   prompt: string;
   seconds: number;
-  tone: "informative" | "casual" | "professional" | "dramatic" | "humorous" | "storytelling";
+  tone:
+    | "informative"
+    | "casual"
+    | "professional"
+    | "dramatic"
+    | "humorous"
+    | "storytelling"
+    | "calm"
+    | "energetic"
+    | "subtle"
+    | "urgent";
   complexity: "simple" | "medium" | "detailed";
   stylePreset: "cinematic" | "educational" | "bold" | "playful" | "premium" | "documentary";
   audience: "general" | "beginners" | "students" | "creators" | "founders" | "executives" | "professionals";

@@ -23,7 +23,17 @@ type JobState = {
   id: string;
   prompt: string;
   seconds: number;
-  tone: "informative" | "casual" | "professional" | "dramatic" | "humorous" | "storytelling";
+  tone:
+    | "informative"
+    | "casual"
+    | "professional"
+    | "dramatic"
+    | "humorous"
+    | "storytelling"
+    | "calm"
+    | "energetic"
+    | "subtle"
+    | "urgent";
   complexity: "simple" | "medium" | "detailed";
   stylePreset: "cinematic" | "educational" | "bold" | "playful" | "premium" | "documentary";
   audience: "general" | "beginners" | "students" | "creators" | "founders" | "executives" | "professionals";
@@ -632,6 +642,16 @@ function renderHtml() {
       padding-top: 14px;
       font-size: 14px;
     }
+    .tone-hint {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(141, 220, 255, 0.12);
+      background: rgba(255,255,255,0.035);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
     .stack {
       display: grid;
       gap: 14px;
@@ -1153,7 +1173,12 @@ function renderHtml() {
                 <option value="dramatic">Dramatic</option>
                 <option value="humorous">Humorous</option>
                 <option value="storytelling">Storytelling</option>
+                <option value="calm">Calm</option>
+                <option value="energetic">Energetic</option>
+                <option value="subtle">Subtle</option>
+                <option value="urgent">Urgent</option>
               </select>
+              <div class="tone-hint" id="toneHint"></div>
             </div>
             <div class="field">
               <label for="complexity">Complexity</label>
@@ -1391,6 +1416,7 @@ function renderHtml() {
     const briefEl = document.getElementById("brief");
     const secondsEl = document.getElementById("seconds");
     const toneEl = document.getElementById("tone");
+    const toneHintEl = document.getElementById("toneHint");
     const complexityEl = document.getElementById("complexity");
     const stylePresetEl = document.getElementById("stylePreset");
     const audienceEl = document.getElementById("audience");
@@ -1421,6 +1447,79 @@ function renderHtml() {
     let activeJobId = null;
     let usageTimer = null;
     let historyTimer = null;
+
+    const TONE_GUIDES = {
+      informative: {
+        title: "Informative",
+        summary: "Clear, direct, and structured for explanation-first videos.",
+        range: "steady-to-clear",
+        script: "Simple phrasing, fast clarity, and practical examples.",
+        visual: "Measured motion with clean emphasis.",
+      },
+      casual: {
+        title: "Casual",
+        summary: "Friendly and relaxed, like a good voice note with structure.",
+        range: "relaxed-to-steady",
+        script: "Conversational language and approachable transitions.",
+        visual: "Soft motion and warm pacing.",
+      },
+      professional: {
+        title: "Professional",
+        summary: "Polished and credible for founder, business, and expert topics.",
+        range: "steady-to-controlled",
+        script: "Concise sentences, sharper framing, and fewer flourishes.",
+        visual: "Controlled motion with crisp visual hierarchy.",
+      },
+      dramatic: {
+        title: "Dramatic",
+        summary: "High contrast and heavier emphasis for big stakes.",
+        range: "subtle-to-dramatic",
+        script: "Stronger breaks, sharper reveals, and higher tension.",
+        visual: "Bold transitions and punchy framing.",
+      },
+      humorous: {
+        title: "Humorous",
+        summary: "Light, playful, and tuned for wit without losing clarity.",
+        range: "playful-to-energetic",
+        script: "Shorter lines, timing beats, and a little surprise.",
+        visual: "Quick motion and expressive cuts.",
+      },
+      storytelling: {
+        title: "Storytelling",
+        summary: "Narrative flow that builds tension and payoff scene by scene.",
+        range: "calm-to-immersive",
+        script: "Scene-to-scene progression with stronger callbacks.",
+        visual: "Gentle movement and cinematic continuity.",
+      },
+      calm: {
+        title: "Calm",
+        summary: "Slow, thoughtful, and easy to absorb.",
+        range: "quiet-to-calm",
+        script: "Longer breaths, soft transitions, and measured language.",
+        visual: "Minimal motion and soft contrast.",
+      },
+      energetic: {
+        title: "Energetic",
+        summary: "Punchy, forward, and built to keep attention moving.",
+        range: "steady-to-energetic",
+        script: "Short lines, faster rhythm, and active verbs.",
+        visual: "Faster motion and brighter contrast.",
+      },
+      subtle: {
+        title: "Subtle",
+        summary: "Understated and refined, with less hype and more nuance.",
+        range: "subtle-to-controlled",
+        script: "Lower-volume language with smoother pacing.",
+        visual: "Quiet motion and restrained emphasis.",
+      },
+      urgent: {
+        title: "Urgent",
+        summary: "Fast-moving and time-sensitive without becoming noisy.",
+        range: "subtle-to-urgent",
+        script: "Immediate hooks, tighter edits, and direct payoff language.",
+        visual: "Quick cuts and strong accent beats.",
+      },
+    };
 
     const PRESET_GUIDES = {
       cinematic: {
@@ -1517,6 +1616,30 @@ function renderHtml() {
       ].join("");
     }
 
+    function renderToneHint() {
+      if (!toneHintEl) return;
+      const guide = TONE_GUIDES[toneEl.value] || TONE_GUIDES.informative;
+      toneHintEl.innerHTML = [
+        '<strong style="display:block;color:var(--text);margin-bottom:6px;">',
+        guide.title,
+        '</strong>',
+        '<div style="display:grid;gap:6px;">',
+        '<div>',
+        guide.summary,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Range:</span> ',
+        guide.range,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Script:</span> ',
+        guide.script,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Visual:</span> ',
+        guide.visual,
+        '</div>',
+        '</div>',
+      ].join("");
+    }
+
     function renderPreview(item) {
       if (!previewEl) return;
       if (!item) {
@@ -1584,6 +1707,7 @@ function renderHtml() {
       audioMoodEl.value = DEFAULTS.audioMood;
       focusEl.value = DEFAULTS.focus;
       syncPresetChips();
+      renderToneHint();
     }
 
     function setUi(job) {
@@ -1821,6 +1945,8 @@ function renderHtml() {
     });
 
     stylePresetEl.addEventListener("change", syncPresetChips);
+    toneEl.addEventListener("change", renderToneHint);
+    toneEl.addEventListener("change", renderToneHint);
 
     historyEl?.addEventListener("click", async (event) => {
       const target = event.target;
@@ -1848,6 +1974,7 @@ function renderHtml() {
       audioMoodEl.value = item.audioMood || audioMoodEl.value;
       focusEl.value = target.getAttribute("data-history-focus") || item.focus || focusEl.value;
       syncPresetChips();
+      renderToneHint();
       promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 

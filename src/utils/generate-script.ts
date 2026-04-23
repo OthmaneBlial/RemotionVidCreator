@@ -86,7 +86,11 @@ export interface GenerateScriptOptions {
     | "professional"
     | "dramatic"
     | "humorous"
-    | "storytelling";
+    | "storytelling"
+    | "calm"
+    | "energetic"
+    | "subtle"
+    | "urgent";
   complexity?: "simple" | "medium" | "detailed";
   targetDurationSeconds?: number;
   useAI?: boolean;
@@ -338,6 +342,26 @@ async function generateMockAIScript(options: {
       `Let’s examine ${topic} through a clear, decision-ready lens.`,
       `This is ${topic}, explained with enough depth to be useful.`,
     ],
+    calm: [
+      `${topic} makes more sense when you slow down and look at the pattern.`,
+      `Here's a calm, clear way to understand ${topic}.`,
+      `${topic} is easier to absorb when you strip away the noise.`,
+    ],
+    energetic: [
+      `${topic} is moving fast, and here's the part you actually need.`,
+      `If you want the quick version of ${topic}, start here.`,
+      `${topic} is one of those topics you need to catch early.`,
+    ],
+    subtle: [
+      `${topic} does not shout for attention, but it changes a lot behind the scenes.`,
+      `Here's the subtle version of ${topic} that still matters a lot.`,
+      `${topic} is a quiet shift with bigger consequences than it first appears.`,
+    ],
+    urgent: [
+      `${topic} matters right now, not later.`,
+      `If you only have a minute, this is the part of ${topic} worth hearing.`,
+      `${topic} is changing the rules faster than most people realize.`,
+    ],
   };
 
   const sectionTemplates = buildSectionTemplates(topic, tone, complexity, direction, brief, goal, pacing);
@@ -466,6 +490,10 @@ function buildAIPrompt(
     dramatic: "intense and attention-grabbing, with powerful statements",
     humorous: "funny and entertaining while still being informative",
     storytelling: "narrative-driven, like telling a compelling story",
+    calm: "thoughtful and measured, with softer emphasis",
+    energetic: "fast, lively, and momentum-driven",
+    subtle: "restrained and nuanced, with a lighter touch",
+    urgent: "direct, sharp, and time-sensitive",
   };
 
   const complexityInstructions: Record<string, string> = {
@@ -915,6 +943,26 @@ function generateHook(topic: string, tone: string): string {
       `Imagine a world where ${topic} changes everything. That world is now.`,
       `The journey of ${topic} is fascinating, and it's only just beginning.`,
     ],
+    calm: [
+      `${topic} makes more sense when you slow down and follow the structure.`,
+      `Here's the calm version of ${topic}, explained clearly.`,
+      `${topic} is easier to understand when the noise drops away.`,
+    ],
+    energetic: [
+      `${topic} is moving fast, and this is the part that matters now.`,
+      `Let's break down ${topic} quickly and clearly.`,
+      `${topic} is one of those things you want to catch early.`,
+    ],
+    subtle: [
+      `${topic} does not need to shout to matter.`,
+      `Here's the subtle version of ${topic} that still changes a lot.`,
+      `${topic} is a quiet shift with bigger consequences than it first appears.`,
+    ],
+    urgent: [
+      `${topic} is changing now. Pay attention.`,
+      `If you need the fast version of ${topic}, start here.`,
+      `${topic} matters right now, not later.`,
+    ],
   };
 
   const options = hooks[tone] || hooks.informative;
@@ -952,6 +1000,26 @@ function generateOutro(topic: string, tone: string): string {
       `The story of ${topic} continues, and now you're part of it.`,
       `And that's where ${topic} stands today. The next chapter is yours to write.`,
       `From obscure to essential - that's the story of ${topic}.`,
+    ],
+    calm: [
+      `That's the calm version of ${topic}. Keep exploring it at your own pace.`,
+      `${topic} makes more sense now. Take the idea with you and revisit it later.`,
+      `If this helped, come back for more slow, clear breakdowns like ${topic}.`,
+    ],
+    energetic: [
+      `That's ${topic}, quick and clear. Follow for the next fast breakdown.`,
+      `Now you have the high-energy version of ${topic}. Share it and keep moving.`,
+      `If you want more sharp takes like this, stay tuned.`,
+    ],
+    subtle: [
+      `That's the quieter side of ${topic}. Sometimes that is where the real signal lives.`,
+      `The subtle version of ${topic} is the one that matters most in the long run.`,
+      `Follow for more nuanced breakdowns like this one.`,
+    ],
+    urgent: [
+      `${topic} is moving. Stay alert and keep following the shift.`,
+      `Now that you know ${topic}, don't miss the next change.`,
+      `If you need more on ${topic}, keep watching for the next update.`,
     ],
   };
 
