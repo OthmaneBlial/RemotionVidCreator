@@ -41,12 +41,42 @@ export const ExplainerVideo = ({
   targetDurationSeconds,
   aspectRatio = "9:16",
   fontSizeScale = 1,
+  stylePreset,
+  audience,
+  platform,
+  intensity,
+  motionLevel,
+  visualDensity,
 }: ExplainerVideoProps) => {
   const { fps } = useVideoConfig();
+  const creativeDirection = script.creativeDirection;
+  const effectiveStylePreset = creativeDirection?.stylePreset || stylePreset || "cinematic";
+  const effectiveIntensity = creativeDirection?.intensity || intensity || "balanced";
+  const effectiveMotion = creativeDirection?.motionLevel || motionLevel || "medium";
+  const effectiveVisualDensity = creativeDirection?.visualDensity || visualDensity || "balanced";
 
   // Get colors from script or fallback
   const primaryColor = script.primaryColor || "#0f172a";
   const effectiveAccent = accentColor || script.accentColor || "#38bdf8";
+  const particleCount =
+    effectiveVisualDensity === "rich" ? 44 : effectiveVisualDensity === "minimal" ? 14 : 28;
+  const orbCount =
+    effectiveStylePreset === "premium"
+      ? 3
+      : effectiveStylePreset === "documentary"
+        ? 2
+        : 4;
+  const rayCount = effectiveIntensity === "wild" ? 9 : effectiveIntensity === "safe" ? 4 : 6;
+  const backgroundSpeed =
+    effectiveMotion === "high" ? 0.75 : effectiveMotion === "minimal" ? 0.25 : 0.5;
+  const introSubtitle =
+    effectiveStylePreset === "premium"
+      ? "Premium Breakdown"
+      : effectiveStylePreset === "educational"
+        ? "Explained Clearly"
+        : effectiveStylePreset === "documentary"
+          ? "Context and Clarity"
+          : "Explained";
 
   // Timing for each section (in frames) - scaled to the requested duration when provided
   const defaultIntroDuration = 5 * fps;
@@ -89,21 +119,21 @@ export const ExplainerVideo = ({
       {/* Dynamic Background */}
       <GradientMesh
         colors={[primaryColor, "#1e293b", "#334155"]}
-        speed={0.5}
+        speed={backgroundSpeed}
       />
 
       {/* Animated Gradient Orbs */}
       <GradientOrbs
         colors={[effectiveAccent, `${effectiveAccent}88`, "#818cf8"]}
-        count={4}
+        count={orbCount}
       />
 
       {/* Floating Particles */}
       <Particles
-        count={30}
+        count={particleCount}
         color={effectiveAccent}
-        size={[2, 5]}
-        opacity={0.4}
+        size={effectiveVisualDensity === "minimal" ? [1, 3] : [2, 5]}
+        opacity={effectiveIntensity === "wild" ? 0.55 : 0.35}
       />
 
       {/* Noise Texture */}
@@ -120,6 +150,7 @@ export const ExplainerVideo = ({
             title={script.title}
             accentColor={effectiveAccent}
             images={images.slice(0, 3)}
+            subtitle={introSubtitle}
             fontSizeScale={fontSizeScale}
           />
         </Series.Sequence>
@@ -145,6 +176,7 @@ export const ExplainerVideo = ({
               sectionContentDuration={sectionContentDuration}
               accentColor={effectiveAccent}
               images={images.slice(3 + index * 2, 6 + index * 2)}
+              caption={script.scenePlan?.[index + 1]?.caption}
               index={index}
               fontSizeScale={fontSizeScale}
             />
@@ -157,6 +189,7 @@ export const ExplainerVideo = ({
             outro={script.outro}
             accentColor={effectiveAccent}
             title={script.title}
+            cta={script.cta}
             fontSizeScale={fontSizeScale}
           />
         </Series.Sequence>
@@ -165,9 +198,9 @@ export const ExplainerVideo = ({
       {/* Light Rays Overlay */}
       <LightRays
         color={effectiveAccent}
-        rayCount={6}
-        opacity={0.05}
-        rotationSpeed={0.02}
+        rayCount={rayCount}
+        opacity={effectiveIntensity === "safe" ? 0.03 : 0.06}
+        rotationSpeed={effectiveMotion === "high" ? 0.03 : 0.02}
       />
 
       {/* Subtle Scanlines */}
@@ -182,11 +215,12 @@ export const ExplainerVideo = ({
 interface DramaticIntroProps {
   title: string;
   accentColor: string;
-  images: Array<{ src: string; alt?: string }>;
+  images: Array<{ src: string; alt?: string; author?: string; authorUrl?: string }>;
+  subtitle: string;
   fontSizeScale: number;
 }
 
-const DramaticIntro = ({ title, accentColor, images, fontSizeScale }: DramaticIntroProps) => {
+const DramaticIntro = ({ title, accentColor, images, subtitle, fontSizeScale }: DramaticIntroProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -202,6 +236,8 @@ const DramaticIntro = ({ title, accentColor, images, fontSizeScale }: DramaticIn
           zoomDirection="in"
           intensity={1.2}
           overlayOpacity={0.5}
+          author={images[0].author}
+          authorUrl={images[0].authorUrl}
         />
       ) : (
         <GradientOrbs colors={[accentColor, "#818cf8", "#c084fc"]} count={3} />
@@ -281,7 +317,7 @@ const DramaticIntro = ({ title, accentColor, images, fontSizeScale }: DramaticIn
               textTransform: "uppercase",
             }}
           >
-            Explained
+            {subtitle}
           </p>
         </div>
       </AbsoluteFill>
@@ -385,7 +421,8 @@ interface SectionWithImageProps {
   sectionTitleDuration: number;
   sectionContentDuration: number;
   accentColor: string;
-  images: Array<{ src: string; alt?: string }>;
+  images: Array<{ src: string; alt?: string; author?: string; authorUrl?: string }>;
+  caption?: string;
   index: number;
   fontSizeScale: number;
 }
@@ -396,6 +433,7 @@ const SectionWithImage = ({
   sectionContentDuration,
   accentColor,
   images,
+  caption,
   index,
   fontSizeScale,
 }: SectionWithImageProps) => {
@@ -477,6 +515,22 @@ const SectionWithImage = ({
             transition: "opacity 0.5s",
           }}
         >
+          {caption ? (
+            <p
+              style={{
+                fontFamily: "Inter, sans-serif",
+                fontSize: `${16 * fontSizeScale}px`,
+                fontWeight: 600,
+                color: `${accentColor}cc`,
+                textAlign: "center",
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                marginBottom: `${16 * fontSizeScale}px`,
+              }}
+            >
+              {caption}
+            </p>
+          ) : null}
           <h2
             style={{
               fontFamily: "CalSans, sans-serif",
@@ -578,10 +632,11 @@ interface DramaticOutroProps {
   outro: string;
   accentColor: string;
   title: string;
+  cta?: string;
   fontSizeScale: number;
 }
 
-const DramaticOutro = ({ outro, accentColor, title, fontSizeScale }: DramaticOutroProps) => {
+const DramaticOutro = ({ outro, accentColor, title, cta, fontSizeScale }: DramaticOutroProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -681,7 +736,7 @@ const DramaticOutro = ({ outro, accentColor, title, fontSizeScale }: DramaticOut
                 textTransform: "uppercase",
               }}
             >
-              Follow for more
+              {cta || "Follow for more"}
             </p>
           </div>
         </div>

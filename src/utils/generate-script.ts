@@ -6,6 +6,56 @@ export interface ScriptSection {
   imageKeywords?: string[]; // Keywords for image search
 }
 
+export type StylePreset =
+  | "cinematic"
+  | "educational"
+  | "bold"
+  | "playful"
+  | "premium"
+  | "documentary";
+
+export type Audience =
+  | "general"
+  | "beginners"
+  | "students"
+  | "creators"
+  | "founders"
+  | "executives"
+  | "professionals";
+
+export type Platform = "tiktok" | "reels" | "shorts" | "vertical";
+
+export type CreativeIntensity = "safe" | "balanced" | "wild";
+export type MotionLevel = "minimal" | "medium" | "high";
+export type NarrativeTemplate =
+  | "problem-solution"
+  | "myth-busting"
+  | "timeline"
+  | "comparison"
+  | "transformation";
+export type VisualDensity = "minimal" | "balanced" | "rich";
+
+export interface ScenePlanItem {
+  title: string;
+  purpose: string;
+  emotion: string;
+  visualDirection: string;
+  cameraMotion: string;
+  caption?: string;
+}
+
+export interface CreativeDirection {
+  stylePreset: StylePreset;
+  audience: Audience;
+  platform: Platform;
+  intensity: CreativeIntensity;
+  motionLevel: MotionLevel;
+  visualDensity: VisualDensity;
+  typography: string;
+  palette: string;
+  narrativeTemplate: NarrativeTemplate;
+}
+
 export interface ExplainerScript {
   title: string;
   hook: string;
@@ -20,15 +70,36 @@ export interface ExplainerScript {
   audioMood?: string;
   // Approximate speaking time in seconds
   estimatedDurationSeconds?: number;
+  creativeDirection?: CreativeDirection;
+  scenePlan?: ScenePlanItem[];
+  cta?: string;
 }
 
 export interface GenerateScriptOptions {
   topic: string;
-  tone?: "informative" | "casual" | "professional" | "dramatic" | "humorous" | "storytelling";
+  tone?:
+    | "informative"
+    | "casual"
+    | "professional"
+    | "dramatic"
+    | "humorous"
+    | "storytelling";
   complexity?: "simple" | "medium" | "detailed";
   targetDurationSeconds?: number;
   useAI?: boolean;
   apiKey?: string;
+  stylePreset?: StylePreset;
+  audience?: Audience;
+  platform?: Platform;
+  intensity?: CreativeIntensity;
+  motionLevel?: MotionLevel;
+  visualDensity?: VisualDensity;
+  narrativeTemplate?: NarrativeTemplate;
+  brief?: string;
+  accentColor?: string;
+  brandColor?: string;
+  audioMood?: string;
+  focus?: "full" | "hook" | "middle" | "outro";
 }
 
 /**
@@ -45,6 +116,18 @@ export async function generateScript(
     targetDurationSeconds,
     useAI = false,
     apiKey,
+    stylePreset = "cinematic",
+    audience = "general",
+    platform = "vertical",
+    intensity = "balanced",
+    motionLevel = "medium",
+    visualDensity = "balanced",
+    narrativeTemplate = "problem-solution",
+    brief,
+    accentColor,
+    brandColor,
+    audioMood,
+    focus = "full",
   } = options;
 
   // Try AI generation if requested
@@ -54,7 +137,24 @@ export async function generateScript(
       // If no API key provided, use mock/demo mode
       if (!apiKey) {
         console.log("   🧪 Using DEMO mode (no API key)");
-        const script = await generateMockAIScript(topic, tone, complexity, targetDurationSeconds);
+        const script = await generateMockAIScript({
+          topic,
+          tone,
+          complexity,
+          targetDurationSeconds,
+          stylePreset,
+          audience,
+          platform,
+          intensity,
+          motionLevel,
+          visualDensity,
+          narrativeTemplate,
+          brief,
+          accentColor,
+          brandColor,
+          audioMood,
+          focus,
+        });
         console.log("   ✅ Demo script generated successfully");
         return script;
       }
@@ -63,7 +163,21 @@ export async function generateScript(
         tone,
         complexity,
         apiKey,
-        targetDurationSeconds
+        targetDurationSeconds,
+        {
+          stylePreset,
+          audience,
+          platform,
+          intensity,
+          motionLevel,
+          visualDensity,
+          narrativeTemplate,
+          brief,
+          accentColor,
+          brandColor,
+          audioMood,
+          focus,
+        }
       );
       console.log("   ✅ AI script generated successfully");
       return script;
@@ -79,11 +193,40 @@ export async function generateScript(
     const searchResults = await searchTopic(topic);
 
     // Generate script based on search results
-    return buildScriptFromSearch(topic, searchResults, tone, complexity);
+    return buildScriptFromSearch(topic, searchResults, tone, complexity, {
+      stylePreset,
+      audience,
+      platform,
+      intensity,
+      motionLevel,
+      visualDensity,
+      narrativeTemplate,
+      brief,
+      accentColor,
+      brandColor,
+      targetDurationSeconds,
+      audioMood,
+      focus,
+    });
   } catch (error) {
     console.error("Error generating script:", error);
     // Fallback to template-based generation
-    return generateTemplateScript(topic);
+    return generateTemplateScript(topic, {
+      stylePreset,
+      audience,
+      platform,
+      intensity,
+      motionLevel,
+      visualDensity,
+      narrativeTemplate,
+      brief,
+      accentColor,
+      brandColor,
+      targetDurationSeconds,
+      tone,
+      audioMood,
+      focus,
+    });
   }
 }
 
@@ -91,146 +234,119 @@ export async function generateScript(
  * Generate mock AI script (demo mode without API key)
  * This simulates what Z.ai would return
  */
-async function generateMockAIScript(
-  topic: string,
-  tone: string,
-  complexity: string,
-  targetDurationSeconds?: number
-): Promise<ExplainerScript> {
+async function generateMockAIScript(options: {
+  topic: string;
+  tone: string;
+  complexity: string;
+  targetDurationSeconds?: number;
+  stylePreset: StylePreset;
+  audience: Audience;
+  platform: Platform;
+  intensity: CreativeIntensity;
+  motionLevel: MotionLevel;
+  visualDensity: VisualDensity;
+  narrativeTemplate: NarrativeTemplate;
+  brief?: string;
+  accentColor?: string;
+  brandColor?: string;
+  audioMood?: string;
+  focus?: "full" | "hook" | "middle" | "outro";
+}): Promise<ExplainerScript> {
+  const {
+    topic,
+    tone,
+    complexity,
+    targetDurationSeconds,
+    stylePreset,
+    audience,
+    platform,
+    intensity,
+    motionLevel,
+    visualDensity,
+    narrativeTemplate,
+    brief,
+    accentColor,
+    brandColor,
+    audioMood,
+    focus,
+  } = options;
+
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  const { primaryColor, accentColor } = generateColorScheme(topic);
+  const direction = buildCreativeDirection({
+    topic,
+    stylePreset,
+    audience,
+    platform,
+    intensity,
+    motionLevel,
+    visualDensity,
+    narrativeTemplate,
+    tone,
+    brief,
+  });
+  const palette = generateColorScheme(topic, stylePreset, accentColor || brandColor);
 
-  // Pre-written high-quality scripts for different tones
-  const mockScripts: Record<string, { hook: string; sections: Array<{title: string; content: string}>; outro: string }> = {
-    humorous: {
-      hook: `Everyone pretends to understand ${topic}. Today, you actually will. No more nodding along like you know what's going on.`,
-      sections: [
-        {
-          title: "What is it really?",
-          content: `Think of ${topic} like that one friend who overcomplicates everything. Strip away the jargon and it's actually pretty simple. It's just a tool/method/concept that solves a specific problem people have been dealing with forever.`
-        },
-        {
-          title: "Why should you care?",
-          content: `Here's the thing - ${topic} is already affecting your life. Whether you realize it or not. The people who understand it? They're the ones making decisions while everyone else is still confused.`
-        },
-        {
-          title: "The bottom line",
-          content: `You don't need to be an expert. You just need to understand the basics. And now? You already know more than 90% of people who pretend to get ${topic}.`
-        }
-      ],
-      outro: `Boom. ${topic} unlocked. Go impress someone with your knowledge. Or don't. Either way, you're welcome.`
-    },
-    storytelling: {
-      hook: `It started as a niche idea that experts said would never catch on. Now? ${topic} is everywhere. This is that story.`,
-      sections: [
-        {
-          title: "The origin",
-          content: `Picture this: a time when ${topic} didn't exist. People were struggling with the problem it would eventually solve. Then came the breakthrough - a simple idea that would change everything.`
-        },
-        {
-          title: "The turning point",
-          content: `What happened next was unexpected. ${topic} didn't just solve the original problem - it opened doors nobody even knew existed. Suddenly, everyone was talking about it. Using it. Building on it.`
-        },
-        {
-          title: "Where we are now",
-          content: `Today, ${topic} is so woven into our daily lives that we barely notice it. But the story isn't over. In fact, we're still writing the next chapter. And you? You're now part of it.`
-        }
-      ],
-      outro: `The story of ${topic} continues. Follow to see what happens next.`
-    },
-    dramatic: {
-      hook: `Stop everything. Because once you understand ${topic}, nothing will look the same again.`,
-      sections: [
-        {
-          title: "The revelation",
-          content: `${topic} isn't just another trend. It's not something you can ignore. This is fundamental. This changes how everything works. And most people still have no idea what's coming.`
-        },
-        {
-          title: "The impact",
-          content: `Every industry. Every career. Every aspect of daily life - ${topic} is reshaping it all. The question isn't whether you'll be affected. The question is whether you'll be ready.`
-        },
-        {
-          title: "Your move",
-          content: `You have two choices right now. Forget what you just learned and let the future happen to you. Or lean in. Understand ${topic}. And be ahead of the curve.`
-        }
-      ],
-      outro: `The future doesn't wait. Neither should you. ${topic} is here. Remember that.`
-    },
-    informative: {
-      hook: `${topic} is everywhere right now, but ask five people to explain it and you'll get five different answers. Let's end the confusion.`,
-      sections: [
-        {
-          title: "Breaking it down",
-          content: `At its core, ${topic} is simply [core concept]. Think of it like a relatable analogy that makes the complex suddenly simple. No jargon. No fluff. Just what it actually does.`
-        },
-        {
-          title: "Real-world impact",
-          content: `Here's why ${topic} matters: it solves a real problem. Companies use it to [specific use case]. Everyday people use it to [another use case]. The applications are growing every day.`
-        },
-        {
-          title: "Key takeaway",
-          content: `You don't need to be an expert to benefit from ${topic}. Understanding the basics puts you ahead of most people. And the basics? You just learned them.`
-        }
-      ],
-      outro: `Now you actually understand ${topic}. Share this with someone who's still confused. They'll thank you.`
-    },
-    casual: {
-      hook: `So you keep hearing about ${topic} everywhere. But like... what actually is it? Let's figure this out.`,
-      sections: [
-        {
-          title: "The simple version",
-          content: `Okay so ${topic} is basically [simple explanation]. That's it. All the complicated stuff people say? Just different ways of explaining this one simple thing.`
-        },
-        {
-          title: "Why people care",
-          content: `${topic} is useful because [practical reason]. It helps people [specific benefit]. That's literally why everyone's talking about it - it actually works for the thing it's supposed to do.`
-        },
-        {
-          title: "What you need to know",
-          content: `Bottom line: ${topic} is worth understanding. Not because it's trendy, but because it's actually useful. And now you get it. Nice.`
-        }
-      ],
-      outro: `And that's ${topic}. Not so scary after you break it down, right? Follow for more stuff explained simply.`
-    },
-    professional: {
-      hook: `In the next few minutes, you'll gain a comprehensive understanding of ${topic} - a critical topic in today's landscape.`,
-      sections: [
-        {
-          title: "Overview and definition",
-          content: `${topic} represents a significant development in [field/industry]. Formally defined as [definition], it addresses the fundamental challenge of [core problem] through an innovative approach.`
-        },
-        {
-          title: "Strategic implications",
-          content: `Organizations leveraging ${topic} have demonstrated measurable improvements in [metrics]. The competitive advantage is clear: early adopters are capturing market share while latecomers risk obsolescence.`
-        },
-        {
-          title: "Key considerations",
-          content: `When evaluating ${topic} for your context, consider [factors]. The potential ROI is substantial, but success requires thoughtful implementation aligned with business objectives.`
-        }
-      ],
-      outro: `${topic} continues to evolve rapidly. Stay informed on developments to maintain competitive advantage.`
-    }
+  const toneHookBank: Record<string, string[]> = {
+    humorous: [
+      `Everyone pretends to understand ${topic}. Today, you actually will.`,
+      `If ${topic} has been sounding like corporate fog, this fixes that.`,
+      `Let's make ${topic} feel way less mysterious than it sounds.`,
+    ],
+    storytelling: [
+      `It started as a small idea. Now ${topic} is shaping the bigger story.`,
+      `The rise of ${topic} is a story of timing, pressure, and change.`,
+      `Every big shift has a beginning. ${topic} is having its moment.`,
+    ],
+    dramatic: [
+      `Stop scrolling. ${topic} is changing the rules faster than most people realize.`,
+      `What looks ordinary today could rewrite everything tomorrow: ${topic}.`,
+      `Once you see ${topic} clearly, you can't unsee what it changes.`,
+    ],
+    informative: [
+      `${topic} is everywhere right now, but most explanations miss the point.`,
+      `Here's the version of ${topic} that actually makes sense.`,
+      `Let’s break down ${topic} without the jargon or filler.`,
+    ],
+    casual: [
+      `So you keep hearing about ${topic}. Here's the version that actually lands.`,
+      `Let's make ${topic} simple enough to remember later.`,
+      `If ${topic} has felt confusing, this should clean it up.`,
+    ],
+    professional: [
+      `Here’s a concise, practical look at ${topic} and why it matters now.`,
+      `Let’s examine ${topic} through a clear, decision-ready lens.`,
+      `This is ${topic}, explained with enough depth to be useful.`,
+    ],
   };
 
-  // Get the mock script for the requested tone, default to informative
-  const mockScript = mockScripts[tone] || mockScripts.informative;
+  const sectionTemplates = buildSectionTemplates(topic, tone, complexity, direction, brief);
+  const mockScript = {
+    title: topic,
+    hook: emphasizeHook(pick(toneHookBank[tone] || toneHookBank.informative), focus),
+    sections: sectionTemplates.map((section, index) => ({
+      ...section,
+      imageKeywords: generateImageKeywords(topic, section.title, direction.stylePreset, direction.audience, String(index + 1)),
+    })),
+    outro: buildOutro(topic, tone, direction),
+    cta: direction.platform === "shorts" ? `Subscribe for more on ${topic}` : `Follow for more`,
+    scenePlan: buildScenePlan(topic, sectionTemplates, direction),
+    creativeDirection: {
+      ...direction,
+      palette: palette.paletteName,
+    },
+    primaryColor: palette.primaryColor,
+    accentColor: palette.accentColor,
+    topicImages: generateImageKeywords(topic, "overview", "concept", direction.stylePreset, direction.audience),
+    audioMood: audioMood || buildAudioMood(direction),
+    estimatedDurationSeconds: targetDurationSeconds,
+  } satisfies ExplainerScript;
 
   return {
-    title: topic,
-    hook: mockScript.hook,
-    sections: mockScript.sections.map(s => ({
-      title: s.title,
-      content: s.content,
-      imageKeywords: generateImageKeywords(topic, s.title)
-    })),
-    outro: mockScript.outro,
-    primaryColor,
-    accentColor,
-    topicImages: generateImageKeywords(topic, "overview", "concept", "intro"),
-    audioMood: "Cinematic ambient pulse with subtle tension and forward motion",
-    estimatedDurationSeconds: targetDurationSeconds,
+    ...mockScript,
+    primaryColor: mockScript.primaryColor || palette.primaryColor,
+    accentColor: mockScript.accentColor || palette.accentColor,
   };
 }
 
@@ -242,9 +358,23 @@ async function generateAIScript(
   tone: string,
   complexity: string,
   apiKey: string,
-  targetDurationSeconds?: number
+  targetDurationSeconds?: number,
+  creative?: {
+    stylePreset: StylePreset;
+    audience: Audience;
+    platform: Platform;
+    intensity: CreativeIntensity;
+    motionLevel: MotionLevel;
+    visualDensity: VisualDensity;
+    narrativeTemplate: NarrativeTemplate;
+    brief?: string;
+    accentColor?: string;
+    brandColor?: string;
+    audioMood?: string;
+    focus?: "full" | "hook" | "middle" | "outro";
+  }
 ): Promise<ExplainerScript> {
-  const prompt = buildAIPrompt(topic, tone, complexity, targetDurationSeconds);
+  const prompt = buildAIPrompt(topic, tone, complexity, targetDurationSeconds, creative);
   const baseUrl = process.env.ZAI_BASE_URL || "https://api.z.ai/api/anthropic";
   const model = process.env.ZAI_MODEL || "claude-sonnet-4-20250514";
   const maxTokens = targetDurationSeconds && targetDurationSeconds <= 10 ? 700 : 2200;
@@ -278,7 +408,7 @@ async function generateAIScript(
   const data = await response.json();
   const content = data.content[0]?.text || "";
 
-  return parseAIResponse(content, topic, tone);
+  return parseAIResponse(content, topic, tone, creative);
 }
 
 /**
@@ -288,7 +418,21 @@ function buildAIPrompt(
   topic: string,
   tone: string,
   complexity: string,
-  targetDurationSeconds?: number
+  targetDurationSeconds?: number,
+  creative?: {
+    stylePreset: StylePreset;
+    audience: Audience;
+    platform: Platform;
+    intensity: CreativeIntensity;
+    motionLevel: MotionLevel;
+    visualDensity: VisualDensity;
+    narrativeTemplate: NarrativeTemplate;
+    brief?: string;
+    accentColor?: string;
+    brandColor?: string;
+    audioMood?: string;
+    focus?: "full" | "hook" | "middle" | "outro";
+  }
 ): string {
   const toneInstructions: Record<string, string> = {
     informative: "educational and clear, perfect for learning",
@@ -305,7 +449,22 @@ function buildAIPrompt(
     detailed: "Comprehensive. Go deep into nuances and specifics.",
   };
 
-  return `You are an expert scriptwriter for viral short-form videos (TikTok, Reels, Shorts).
+  const creativeDirection = creative
+    ? `- Style preset: ${creative.stylePreset}
+- Audience: ${creative.audience}
+- Platform: ${creative.platform}
+- Intensity: ${creative.intensity}
+- Motion level: ${creative.motionLevel}
+- Visual density: ${creative.visualDensity}
+- Narrative template: ${creative.narrativeTemplate}
+- Optional brief: ${creative.brief || "none"}
+- Brand color: ${creative.brandColor || "auto"}
+- Accent color: ${creative.accentColor || "auto"}`
+    : "- Style preset: cinematic\n- Audience: general\n- Platform: vertical\n- Intensity: balanced\n- Motion level: medium\n- Visual density: balanced\n- Narrative template: problem-solution";
+  const focusLine = creative?.focus ? `- Regeneration focus: ${creative.focus}` : "- Regeneration focus: full";
+  const audioMoodLine = creative?.audioMood ? `- Audio mood: ${creative.audioMood}` : "- Audio mood: auto";
+
+  return `You are an expert scriptwriter for premium short-form videos.
 
 Create an engaging explainer video script about: **${topic}**
 
@@ -313,14 +472,17 @@ Create an engaging explainer video script about: **${topic}**
 - Tone: ${toneInstructions[tone] || toneInstructions.informative}
 - Complexity: ${complexityInstructions[complexity] || complexityInstructions.medium}
 - Duration: ${targetDurationSeconds ? `about ${targetDurationSeconds} seconds` : "~60-90 seconds of spoken content"}
-- Format: Vertical 9:16 video (TikTok/Reels style)
+- Format: Vertical-first video
+${creativeDirection}
+${focusLine}
+${audioMoodLine}
 
 **Script Structure:**
 1. HOOK - Grab attention in the first 2 seconds. Make it irresistible.
-2. SECTION 1 - "What is it?" - Clear explanation
-3. SECTION 2 - "Why does it matter?" - Real-world impact
-4. SECTION 3 - "Key takeaway" - The most important thing to remember
-5. OUTRO - Call to action (follow for more)
+2. SECTION 1 - Explain the core idea clearly.
+3. SECTION 2 - Show why it matters in the real world.
+4. SECTION 3 - Add the strongest takeaway or contrast.
+5. OUTRO - End with a crisp CTA that matches the platform.
 
 **Content Guidelines:**
 - Hook must be provocative or intriguing
@@ -329,8 +491,12 @@ Create an engaging explainer video script about: **${topic}**
 - Include specific examples when possible
 - Make it memorable and shareable
 - Avoid clichés unless used intentionally
+- Make the story feel tailored to the audience
+- Make the visuals feel deliberate, not generic
 - Add a short audio mood line for a background bed
-- Add image keyword ideas for each section
+- Add image keyword ideas for each section and topic
+- Add a scene plan with visual direction and camera motion
+- Add creative direction metadata
 - If duration is very short, keep it extremely tight with one hook and one compact section
 
 **Response Format (JSON):**
@@ -354,6 +520,28 @@ Create an engaging explainer video script about: **${topic}**
   ],
   "outro": "Outro text here...",
   "audioMood": "One short line describing the background audio bed",
+  "cta": "Short call to action",
+  "creativeDirection": {
+    "stylePreset": "${creative?.stylePreset || "cinematic"}",
+    "audience": "${creative?.audience || "general"}",
+    "platform": "${creative?.platform || "vertical"}",
+    "intensity": "${creative?.intensity || "balanced"}",
+    "motionLevel": "${creative?.motionLevel || "medium"}",
+    "visualDensity": "${creative?.visualDensity || "balanced"}",
+    "typography": "Short phrase describing typography",
+    "palette": "Short phrase describing palette",
+    "narrativeTemplate": "${creative?.narrativeTemplate || "problem-solution"}"
+  },
+  "scenePlan": [
+    {
+      "title": "Scene title",
+      "purpose": "What this scene accomplishes",
+      "emotion": "What the viewer should feel",
+      "visualDirection": "What should appear on screen",
+      "cameraMotion": "Zoom in, pan, or hold",
+      "caption": "Optional caption line"
+    }
+  ],
   "estimatedDurationSeconds": ${targetDurationSeconds ?? 75}
 }
 \`\`\`
@@ -364,7 +552,25 @@ Generate the script now. Return ONLY the JSON, no other text.`;
 /**
  * Parse AI response into ExplainerScript
  */
-function parseAIResponse(content: string, topic: string, tone: string): ExplainerScript {
+function parseAIResponse(
+  content: string,
+  topic: string,
+  tone: string,
+  creative?: {
+    stylePreset: StylePreset;
+    audience: Audience;
+    platform: Platform;
+    intensity: CreativeIntensity;
+    motionLevel: MotionLevel;
+    visualDensity: VisualDensity;
+    narrativeTemplate: NarrativeTemplate;
+    brief?: string;
+    accentColor?: string;
+    brandColor?: string;
+    audioMood?: string;
+    focus?: "full" | "hook" | "middle" | "outro";
+  }
+): ExplainerScript {
   try {
     // Try to extract JSON from markdown code blocks
     let jsonContent = content;
@@ -389,22 +595,44 @@ function parseAIResponse(content: string, topic: string, tone: string): Explaine
     }
 
     // Generate color scheme based on topic
-    const { primaryColor, accentColor } = generateColorScheme(topic);
+    const palette = generateColorScheme(topic, creative?.stylePreset, creative?.accentColor || creative?.brandColor);
+    const creativeDirection = parsed.creativeDirection || buildCreativeDirection({
+      topic,
+      tone,
+      stylePreset: creative?.stylePreset || "cinematic",
+      audience: creative?.audience || "general",
+      platform: creative?.platform || "vertical",
+      intensity: creative?.intensity || "balanced",
+      motionLevel: creative?.motionLevel || "medium",
+      visualDensity: creative?.visualDensity || "balanced",
+      narrativeTemplate: creative?.narrativeTemplate || "problem-solution",
+      brief: creative?.brief,
+    });
+    const sections = parsed.sections.map((section: any, index: number) => ({
+      title: section.title || `Section ${index + 1}`,
+      content: section.content || "",
+      imageKeywords: section.imageKeywords?.length
+        ? section.imageKeywords
+        : generateImageKeywords(topic, section.title, creativeDirection.stylePreset, creativeDirection.audience),
+    }));
 
     return {
       title: parsed.title || topic,
-      hook: parsed.hook || generateHook(topic, tone),
-      sections: parsed.sections.map((section: any) => ({
-        title: section.title || "Section",
-        content: section.content || "",
-        imageKeywords: generateImageKeywords(topic, section.title, "visual", "concept"),
-      })),
+      hook: emphasizeHook(parsed.hook || generateHook(topic, tone), creative?.focus),
+      sections,
       outro: parsed.outro || generateOutro(topic, tone),
-      primaryColor,
-      accentColor,
-      topicImages: generateImageKeywords(topic, "overview", "landscape", "intro"),
-      audioMood: parsed.audioMood || "Cinematic ambient pulse with subtle tension and forward motion",
+      cta: parsed.cta || buildDefaultCTA(creativeDirection),
+      creativeDirection,
+      primaryColor: palette.primaryColor,
+      accentColor: palette.accentColor,
+      topicImages: parsed.topicImages?.length
+        ? parsed.topicImages
+        : generateImageKeywords(topic, "overview", "landscape", "intro", creativeDirection.stylePreset),
+      audioMood: creative?.audioMood || parsed.audioMood || buildAudioMood(creativeDirection),
       estimatedDurationSeconds: parsed.estimatedDurationSeconds,
+      scenePlan: Array.isArray(parsed.scenePlan) && parsed.scenePlan.length > 0
+        ? parsed.scenePlan
+        : buildScenePlan(topic, sections, creativeDirection),
     };
   } catch (error) {
     console.error("Failed to parse AI response, falling back to template");
@@ -459,7 +687,22 @@ function buildScriptFromSearch(
   topic: string,
   searchResults: string[],
   tone: string,
-  complexity: string
+  complexity: string,
+  creative?: {
+    stylePreset: StylePreset;
+    audience: Audience;
+    platform: Platform;
+    intensity: CreativeIntensity;
+    motionLevel: MotionLevel;
+    visualDensity: VisualDensity;
+    narrativeTemplate: NarrativeTemplate;
+    brief?: string;
+    accentColor?: string;
+    brandColor?: string;
+    audioMood?: string;
+    focus?: "full" | "hook" | "middle" | "outro";
+    targetDurationSeconds?: number;
+  }
 ): ExplainerScript {
   // Extract key information from search results
   const keyPoints = searchResults.slice(0, 3).map((result) =>
@@ -470,39 +713,55 @@ function buildScriptFromSearch(
   );
 
   // Generate color scheme based on topic
-  const { primaryColor, accentColor } = generateColorScheme(topic);
+  const direction = buildCreativeDirection({
+    topic,
+    tone,
+    stylePreset: creative?.stylePreset || "educational",
+    audience: creative?.audience || "general",
+    platform: creative?.platform || "vertical",
+    intensity: creative?.intensity || "balanced",
+    motionLevel: creative?.motionLevel || "medium",
+    visualDensity: creative?.visualDensity || "balanced",
+    narrativeTemplate: creative?.narrativeTemplate || "problem-solution",
+    brief: creative?.brief,
+  });
+  const palette = generateColorScheme(topic, direction.stylePreset, creative?.accentColor || creative?.brandColor);
 
   // Generate image keywords for each section
   const sections = [
     {
       title: "What is it?",
       content: keyPoints[0] || `Understanding ${topic} starts with knowing the basics. Let's break it down.`,
-      imageKeywords: generateImageKeywords(topic, "concept", "abstract", "technology"),
+      imageKeywords: generateImageKeywords(topic, "concept", "abstract", "technology", direction.stylePreset),
     },
     {
       title: "Why does it matter?",
       content:
         keyPoints[1] ||
         `${topic} has a significant impact on how we work and live. Understanding it gives you an edge.`,
-      imageKeywords: generateImageKeywords(topic, "impact", "innovation", "future"),
+      imageKeywords: generateImageKeywords(topic, "impact", "innovation", "future", direction.audience),
     },
     {
       title: "The key takeaway",
       content:
         keyPoints[2] ||
         `The main point to remember is that ${topic} is more relevant now than ever.`,
-      imageKeywords: generateImageKeywords(topic, "success", "growth", "opportunity"),
+      imageKeywords: generateImageKeywords(topic, "success", "growth", "opportunity", direction.intensity),
     },
   ];
 
   return {
     title: topic,
-    hook: generateHook(topic, tone),
+    hook: emphasizeHook(generateHook(topic, tone), creative?.focus),
     sections,
-    outro: generateOutro(topic, tone),
-    primaryColor,
-    accentColor,
-    topicImages: generateImageKeywords(topic, "overview", "landscape"),
+    outro: buildOutro(topic, tone, direction),
+    cta: buildDefaultCTA(direction),
+    creativeDirection: direction,
+    primaryColor: palette.primaryColor,
+    accentColor: palette.accentColor,
+    topicImages: generateImageKeywords(topic, "overview", "landscape", direction.stylePreset),
+    audioMood: creative?.audioMood || buildAudioMood(direction),
+    scenePlan: buildScenePlan(topic, sections, direction),
   };
 }
 
@@ -527,7 +786,11 @@ function generateImageKeywords(...inputs: string[]): string[] {
 /**
  * Generate a color scheme based on the topic
  */
-function generateColorScheme(topic: string): { primaryColor: string; accentColor: string } {
+function generateColorScheme(
+  topic: string,
+  stylePreset?: StylePreset,
+  customAccent?: string
+): { primaryColor: string; accentColor: string; paletteName: string } {
   const topicLower = topic.toLowerCase();
 
   const colorSchemes: Record<string, { primaryColor: string; accentColor: string }> = {
@@ -543,15 +806,37 @@ function generateColorScheme(topic: string): { primaryColor: string; accentColor
     sports: { primaryColor: "#1a1a1a", accentColor: "#ef4444" },
   };
 
+  const styleOverrides: Record<StylePreset, Partial<{ primaryColor: string; accentColor: string; paletteName: string }>> = {
+    cinematic: { paletteName: "Midnight Cinema" },
+    educational: { accentColor: "#60a5fa", paletteName: "Blue Signal" },
+    bold: { primaryColor: "#111827", accentColor: "#f97316", paletteName: "Bold Ember" },
+    playful: { primaryColor: "#312e81", accentColor: "#f472b6", paletteName: "Playful Neon" },
+    premium: { primaryColor: "#111111", accentColor: "#d4af37", paletteName: "Premium Gold" },
+    documentary: { primaryColor: "#0b1320", accentColor: "#94a3b8", paletteName: "Documentary Steel" },
+  };
+
   // Check for keywords in topic
   for (const [key, scheme] of Object.entries(colorSchemes)) {
     if (topicLower.includes(key)) {
-      return scheme;
+      return {
+        primaryColor: styleOverrides[stylePreset || "cinematic"]?.primaryColor || scheme.primaryColor,
+        accentColor:
+          customAccent ||
+          styleOverrides[stylePreset || "cinematic"]?.accentColor ||
+          scheme.accentColor,
+        paletteName:
+          styleOverrides[stylePreset || "cinematic"]?.paletteName || `${key} scheme`,
+      };
     }
   }
 
   // Default scheme
-  return { primaryColor: "#0f172a", accentColor: "#38bdf8" };
+  const style = styleOverrides[stylePreset || "cinematic"];
+  return {
+    primaryColor: style?.primaryColor || "#0f172a",
+    accentColor: customAccent || style?.accentColor || "#38bdf8",
+    paletteName: style?.paletteName || "Default Night",
+  };
 }
 
 function generateHook(topic: string, tone: string): string {
@@ -630,33 +915,237 @@ function generateOutro(topic: string, tone: string): string {
   return options[Math.floor(Math.random() * options.length)];
 }
 
-function generateTemplateScript(topic: string): ExplainerScript {
-  const { primaryColor, accentColor } = generateColorScheme(topic);
+function buildCreativeDirection(options: {
+  topic: string;
+  tone?: string;
+  stylePreset: StylePreset;
+  audience: Audience;
+  platform: Platform;
+  intensity: CreativeIntensity;
+  motionLevel: MotionLevel;
+  visualDensity: VisualDensity;
+  narrativeTemplate: NarrativeTemplate;
+  brief?: string;
+}): CreativeDirection {
+  const typographyByStyle: Record<StylePreset, string> = {
+    cinematic: "High-contrast title case with wide tracking",
+    educational: "Clear, highly legible educational framing",
+    bold: "Condensed headline typography with hard edges",
+    playful: "Friendly rounded type with lively emphasis",
+    premium: "Elegant editorial typography with restraint",
+    documentary: "Measured, journalistic typography with clarity",
+  };
+
+  return {
+    stylePreset: options.stylePreset,
+    audience: options.audience,
+    platform: options.platform,
+    intensity: options.intensity,
+    motionLevel: options.motionLevel,
+    visualDensity: options.visualDensity,
+    narrativeTemplate: options.narrativeTemplate,
+    typography: typographyByStyle[options.stylePreset],
+    palette: `${options.stylePreset} palette`,
+  };
+}
+
+function buildScenePlan(topic: string, sections: ScriptSection[], direction: CreativeDirection): ScenePlanItem[] {
+  const entries: ScenePlanItem[] = [
+    {
+      title: "Hook",
+      purpose: "Stop the scroll and frame the topic fast.",
+      emotion: direction.intensity === "wild" ? "urgent" : "curious",
+      visualDirection: `Bold title treatment for ${topic} with immediate motion and contrast.`,
+      cameraMotion: direction.motionLevel === "minimal" ? "hold" : "slow push in",
+      caption: direction.stylePreset === "premium" ? "A better way to see the topic." : "Here’s the real version.",
+    },
+  ];
+
+  sections.forEach((section, index) => {
+    entries.push({
+      title: section.title,
+      purpose: section.content.slice(0, 90),
+      emotion: index % 2 === 0 ? "clarity" : "momentum",
+      visualDirection: section.imageKeywords?.length
+        ? `Use imagery around ${section.imageKeywords.slice(0, 3).join(", ")}.`
+        : `Use text-led motion and abstract design around ${section.title}.`,
+      cameraMotion:
+        direction.motionLevel === "high"
+          ? "dynamic pan with subtle zoom"
+          : direction.motionLevel === "medium"
+            ? "measured push"
+            : "static emphasis",
+      caption: section.title,
+    });
+  });
+
+  entries.push({
+    title: "Outro",
+    purpose: "Land the takeaway and set up the CTA.",
+    emotion: "resolve",
+    visualDirection: `Close with strong branding and a ${direction.stylePreset} finish.`,
+    cameraMotion: "gentle pull back",
+    caption: "Follow for more.",
+  });
+
+  return entries;
+}
+
+function buildAudioMood(direction: CreativeDirection): string {
+  const moodByStyle: Record<StylePreset, string> = {
+    cinematic: "Cinematic ambient pulse with rising energy and low-end movement",
+    educational: "Clean ambient bed with steady pulse and minimal distraction",
+    bold: "Percussive pulse with sharp accents and forward momentum",
+    playful: "Bright rhythmic bed with light percussion and bounce",
+    premium: "Polished atmospheric bed with restrained tension",
+    documentary: "Textured ambient score with subtle tension and space",
+  };
+
+  return moodByStyle[direction.stylePreset];
+}
+
+function buildDefaultCTA(direction: CreativeDirection): string {
+  const byPlatform: Record<Platform, string> = {
+    tiktok: "Follow for the next breakdown",
+    reels: "Save this and share it",
+    shorts: "Subscribe for more",
+    vertical: "Keep watching for more",
+  };
+
+  return byPlatform[direction.platform];
+}
+
+function buildOutro(topic: string, tone: string, direction: CreativeDirection): string {
+  const toneOutro = generateOutro(topic, tone);
+  const platformCall = direction.platform === "shorts" ? "Subscribe for more." : "Follow for more.";
+  if (/follow|subscribe/i.test(toneOutro)) {
+    return toneOutro;
+  }
+  return `${toneOutro} ${platformCall}`;
+}
+
+function pick<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function emphasizeHook(hook: string, focus?: "full" | "hook" | "middle" | "outro"): string {
+  if (focus === "hook") {
+    return `${hook} This opening matters, so it stays tight and attention-first.`;
+  }
+  if (focus === "middle") {
+    return `${hook} The middle sections should carry the strongest explanation and payoff.`;
+  }
+  if (focus === "outro") {
+    return `${hook} The ending should land with a stronger callback and CTA.`;
+  }
+  return hook;
+}
+
+function buildSectionTemplates(
+  topic: string,
+  tone: string,
+  complexity: string,
+  direction: CreativeDirection,
+  brief?: string
+): Array<{ title: string; content: string }> {
+  const firstSection =
+    direction.narrativeTemplate === "myth-busting"
+      ? {
+          title: "The myth vs the truth",
+          content: `${topic} gets explained in a lot of confusing ways. The simple version: ${brief || "it solves a real-world problem with a clearer, faster approach."}`,
+        }
+      : direction.narrativeTemplate === "timeline"
+        ? {
+            title: "How it got here",
+            content: `${topic} did not appear overnight. It evolved through pressure, experimentation, and a shift in what people needed.`,
+          }
+        : {
+            title: "The core idea",
+            content: `${topic} is easier to understand when you strip away the noise and focus on the main job it does.`,
+          };
+
+  const secondSection =
+    direction.narrativeTemplate === "comparison"
+      ? {
+          title: "Why this beats the old way",
+          content: `Compared with older approaches, ${topic} is often faster, clearer, or more scalable depending on the use case.`,
+        }
+      : direction.narrativeTemplate === "transformation"
+        ? {
+            title: "What changes when you use it",
+            content: `Once you understand ${topic}, the way you make decisions, build things, or explain the problem gets sharper.`,
+          }
+        : {
+            title: "Why it matters",
+            content: `${topic} matters because it changes the outcome in ways people actually notice.`,
+          };
+
+  const thirdSection =
+    complexity === "detailed"
+      ? {
+          title: "What to remember",
+          content: `The main thing to remember about ${topic} is how it changes tradeoffs. That is where the real value shows up.`,
+        }
+      : {
+          title: "The takeaway",
+          content: `The short version: ${topic} is worth understanding because it keeps showing up in real decisions.`,
+        };
+
+  return [firstSection, secondSection, thirdSection];
+}
+
+function generateTemplateScript(
+  topic: string,
+  creative?: {
+    stylePreset: StylePreset;
+    audience: Audience;
+    platform: Platform;
+    intensity: CreativeIntensity;
+    motionLevel: MotionLevel;
+    visualDensity: VisualDensity;
+    narrativeTemplate: NarrativeTemplate;
+    brief?: string;
+    accentColor?: string;
+    brandColor?: string;
+    audioMood?: string;
+    focus?: "full" | "hook" | "middle" | "outro";
+    targetDurationSeconds?: number;
+    tone?: string;
+  }
+): ExplainerScript {
+  const direction = buildCreativeDirection({
+    topic,
+    tone: creative?.tone,
+    stylePreset: creative?.stylePreset || "educational",
+    audience: creative?.audience || "general",
+    platform: creative?.platform || "vertical",
+    intensity: creative?.intensity || "balanced",
+    motionLevel: creative?.motionLevel || "medium",
+    visualDensity: creative?.visualDensity || "balanced",
+    narrativeTemplate: creative?.narrativeTemplate || "problem-solution",
+    brief: creative?.brief,
+  });
+  const palette = generateColorScheme(topic, direction.stylePreset, creative?.accentColor || creative?.brandColor);
 
   return {
     title: topic,
-    hook: `Let me explain ${topic} in a way that actually makes sense.`,
-    sections: [
-      {
-        title: "The Basics",
-        content: `${topic} is a fascinating subject that affects many aspects of our daily lives. Understanding it starts with the fundamentals.`,
-        imageKeywords: generateImageKeywords(topic, "concept", "introduction"),
-      },
-      {
-        title: "Why It Matters",
-        content: `The importance of ${topic} cannot be overstated. It has implications for how we work, live, and interact with the world around us.`,
-        imageKeywords: generateImageKeywords(topic, "importance", "impact"),
-      },
-      {
-        title: "Looking Ahead",
-        content: `The future of ${topic} is exciting and full of possibilities. Those who understand it now will be ahead of the curve.`,
-        imageKeywords: generateImageKeywords(topic, "future", "innovation"),
-      },
-    ],
-    outro: `Now you understand ${topic}. Share this with someone who could benefit from knowing more.`,
-    primaryColor,
-    accentColor,
-    topicImages: generateImageKeywords(topic, "overview"),
+    hook: emphasizeHook(generateHook(topic, creative?.tone || "informative"), creative?.focus),
+    sections: buildSectionTemplates(topic, creative?.tone || "informative", "medium", direction, creative?.brief).map((section) => ({
+      ...section,
+      imageKeywords: generateImageKeywords(topic, section.title, direction.stylePreset),
+    })),
+    outro: buildOutro(topic, creative?.tone || "informative", direction),
+    cta: buildDefaultCTA(direction),
+    creativeDirection: direction,
+    primaryColor: palette.primaryColor,
+    accentColor: palette.accentColor,
+    topicImages: generateImageKeywords(topic, "overview", direction.stylePreset),
+    audioMood: creative?.audioMood || buildAudioMood(direction),
+    estimatedDurationSeconds: creative?.targetDurationSeconds,
+    scenePlan: buildScenePlan(topic, buildSectionTemplates(topic, creative?.tone || "informative", "medium", direction, creative?.brief).map((section) => ({
+      ...section,
+      imageKeywords: generateImageKeywords(topic, section.title, direction.stylePreset),
+    })), direction),
   };
 }
 

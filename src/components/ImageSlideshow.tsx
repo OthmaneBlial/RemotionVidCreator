@@ -12,6 +12,7 @@ export interface SlideImage {
   src: string;
   alt?: string;
   author?: string;
+  authorUrl?: string;
 }
 
 interface ImageSlideshowProps {
@@ -160,6 +161,34 @@ export const ImageSlideshow = ({
           />
         </AbsoluteFill>
       )}
+
+      {currentImage.author ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 28,
+            bottom: 28,
+            zIndex: 5,
+            maxWidth: "70%",
+            padding: "10px 14px",
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.55)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "rgba(255,255,255,0.92)",
+            fontFamily: "Inter, sans-serif",
+            fontSize: 12,
+            lineHeight: 1.4,
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <span>Photo by {currentImage.author} on Unsplash</span>
+          {currentImage.authorUrl ? (
+            <span style={{ color: "rgba(255,255,255,0.7)", display: "block", marginTop: 2 }}>
+              {currentImage.authorUrl}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </AbsoluteFill>
   );
 };
@@ -175,6 +204,8 @@ interface SingleImageProps {
   panY?: number;
   overlayOpacity?: number;
   grayscale?: boolean;
+  author?: string;
+  authorUrl?: string;
 }
 
 export const KenBurnsImage = ({
@@ -185,6 +216,8 @@ export const KenBurnsImage = ({
   panY = 0,
   overlayOpacity = 0.2,
   grayscale = false,
+  author,
+  authorUrl,
 }: SingleImageProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -226,6 +259,34 @@ export const KenBurnsImage = ({
           opacity: overlayOpacity,
         }}
       />
+
+      {author ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 28,
+            bottom: 28,
+            zIndex: 5,
+            maxWidth: "70%",
+            padding: "10px 14px",
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.55)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "rgba(255,255,255,0.92)",
+            fontFamily: "Inter, sans-serif",
+            fontSize: 12,
+            lineHeight: 1.4,
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <span>Photo by {author} on Unsplash</span>
+          {authorUrl ? (
+            <span style={{ color: "rgba(255,255,255,0.7)", display: "block", marginTop: 2 }}>
+              {authorUrl}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Vignette */}
       <AbsoluteFill>

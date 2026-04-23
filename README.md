@@ -1,15 +1,45 @@
-# Remotion Explainer Video Generator
+# Remotion AI Video Generator
 
-Generate engaging explainer videos from any topic using Remotion. The system researches the topic, generates a script, and produces a polished 9:16 vertical video ready for TikTok, Instagram Reels, or YouTube Shorts.
+Generate engaging explainer videos from any topic using Remotion. The system researches the topic, builds a scene plan, generates a script, and produces a polished vertical video ready for TikTok, Instagram Reels, or YouTube Shorts.
+
+The app now uses a Python backend for job orchestration and Unsplash rate tracking, while the browser frontend stays focused on prompting, status, and review.
 
 ## Features
 
-- **Auto-generated scripts**: Researches topics and structures content into hooks, sections, and outros
-- **AI mode**: A local browser-based generator that accepts a topic and target duration, then runs research in the background
-- **Multiple tones**: informative, casual, professional, or dramatic
+- **Auto-generated scripts**: Researches topics and structures content into hooks, sections, outros, and scene plans
+- **AI mode only**: The browser-based generator is the primary workflow
+- **Deep customization**: Style presets, audience targeting, platform targeting, intensity, motion, and narrative templates
 - **Animated components**: Smooth transitions, text animations, and progress indicators
-- **Customizable**: Color schemes, timing, and content styles
+- **Creative fallback system**: Strong defaults when AI or assets are limited
 - **CLI interface**: Simple command to generate videos from any topic
+- **Python backend**: Handles job queueing, progress, usage tracking, and render orchestration
+
+## Unsplash Production Application
+
+Recommended application name:
+
+- `Remotion AI Video Generator`
+
+Recommended application description:
+
+- `An AI-powered vertical video generator that uses Unsplash photos as licensed visual sources, hotlinks image URLs directly from Unsplash, triggers download events when a photo is used in a render, and shows photographer attribution in the generated video.`
+
+Why this should pass review:
+
+- It does not use the Unsplash logo.
+- It does not use a name similar to Unsplash.
+- The product is clearly an AI video generator, not a wallpaper app or an Unsplash client.
+- Photo URLs are hotlinked from `photo.urls`.
+- The app calls the download endpoint when a photo is selected for use.
+- Photographer attribution is visible in the rendered video and profile links include the required UTM parameters.
+
+Compliance checklist:
+
+- Hotlinked photos: yes, the renderer uses direct Unsplash image URLs.
+- Download tracking: yes, the app calls `download_location` when a photo is used.
+- Attribution: yes, the video overlays photographer credit and profile links.
+- Branding: yes, the app name and UI do not use the Unsplash logo or a confusingly similar name.
+- Accuracy: yes, the application description above matches what the product actually does.
 
 ## Quick Start
 
@@ -17,11 +47,14 @@ Generate engaging explainer videos from any topic using Remotion. The system res
 # Install dependencies
 npm install
 
-# Start Remotion Studio (preview mode)
+# Make sure Python 3 is installed for the backend
+python3 --version
+
+# Start the full stack
 npm start
 
-# Start AI mode
-npm run ai
+# Or explicitly
+npm run dev
 
 # Generate a video
 npm run generate "The Future of AI"
@@ -41,12 +74,38 @@ npm run generate "your topic here"
 npm run ai
 ```
 
-The AI mode opens a local page with one generate button, a duration input, and a live progress bar. It:
+`npm start`, `npm run dev`, and `npm run ai` all launch the full local stack: the Python backend plus the browser frontend.
+
+The AI mode opens a local page with a rich creation brief, preset controls, and a live progress bar. It:
 
 - Uses Z.ai through the Anthropic-compatible `messages` API
 - Uses Unsplash for topic-aware images with a hard 50-requests/hour server limit
 - Generates an ambient audio bed
+- Builds a scene plan and creative direction before rendering
 - Renders the final video in the background
+- Uses a Python backend service to queue the job and track Unsplash usage
+
+The browser controls now include style presets, audience targeting, platform targeting, motion and density controls, custom audio mood, and a regeneration focus for remixing specific parts of a video.
+
+### Backend architecture
+
+- Frontend: `bin/ai-mode.ts`
+- Backend: `backend/server.py`
+- Render worker: `bin/backend-render.ts`
+
+The frontend only displays state and accepts input. The Python backend owns job creation, status, history, and Unsplash usage tracking. The render worker does the actual script generation, image selection, audio generation, and Remotion render.
+
+### Unsplash attribution
+
+Every used Unsplash photo should appear with credit in the rendered video as:
+
+- `Photo by <Photographer Name> on Unsplash`
+
+The photographer profile link is built with UTM parameters in the form:
+
+- `https://unsplash.com/@username?utm_source=remotion-ai-video-generator&utm_medium=referral`
+
+This keeps attribution visible and reviewable while staying inside the API guidelines.
 
 ### With options
 
@@ -60,6 +119,16 @@ npm run generate "your topic" --tone casual --complexity simple
 |--------|--------|-------------|
 | `--tone` | `informative`, `casual`, `professional`, `dramatic` | Sets the video tone |
 | `--complexity` | `simple`, `medium`, `detailed` | Content depth |
+| `--style` | `cinematic`, `educational`, `bold`, `playful`, `premium`, `documentary` | Creative style preset |
+| `--audience` | `general`, `beginners`, `students`, `creators`, `founders`, `executives`, `professionals` | Target audience |
+| `--platform` | `tiktok`, `reels`, `shorts`, `vertical` | Platform-aware pacing |
+| `--intensity` | `safe`, `balanced`, `wild` | Visual energy level |
+| `--motion` | `minimal`, `medium`, `high` | Motion level |
+| `--density` | `minimal`, `balanced`, `rich` | Visual density |
+| `--narrative` | `problem-solution`, `myth-busting`, `timeline`, `comparison`, `transformation` | Story structure |
+| `--brief` | text | Extra creative brief for the AI |
+| `--audio-mood` | text | Custom ambient audio direction |
+| `--focus` | `full`, `hook`, `middle`, `outro` | Regeneration focus |
 | `--output` | filepath | Custom output path |
 
 ### Environment variables
@@ -70,18 +139,20 @@ npm run generate "your topic" --tone casual --complexity simple
 | `ZAI_BASE_URL` | Optional override for the Anthropic-compatible base URL |
 | `ZAI_MODEL` | Optional model name, defaults to `claude-sonnet-4-20250514` |
 | `UNSPLASH_ACCESS_KEY` | Unsplash access key used for image search |
+| `BACKEND_PORT` | Optional backend port, defaults to `3010` |
+| `PYTHON` | Optional Python binary path used to launch the backend |
 
 ## Examples
 
 ```bash
-# Casual video about quantum computing
-npm run generate "Quantum Computing" --tone casual
+# Cinematic video about quantum computing
+npm run generate "Quantum Computing" --tone casual --style cinematic
 
-# Professional explanation of blockchain
-npm run generate "Blockchain Technology" --tone professional
+# Professional explanation of blockchain for founders
+npm run generate "Blockchain Technology" --tone professional --audience founders --platform shorts
 
-# Detailed video with custom output
-npm run generate "Machine Learning Basics" --complexity detailed --output ./videos/ml.mp4
+# Detailed video with custom output and a stronger narrative
+npm run generate "Machine Learning Basics" --complexity detailed --narrative comparison --output ./videos/ml.mp4
 ```
 
 ## Project Structure

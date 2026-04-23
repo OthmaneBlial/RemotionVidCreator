@@ -6,8 +6,8 @@
  * Usage:
  *   npm run generate -- "topic name"
  *   npm run generate -- "topic name" --tone casual
- *   npm run generate -- "topic name" --complexity simple --no-images
- *   npm run generate -- "topic name" --use-ai
+ *   npm run generate -- "topic name" --complexity simple --style cinematic
+ *   npm run generate -- "topic name" --platform shorts --audience beginners
  */
 
 import "../src/utils/load-env.js";
@@ -60,9 +60,19 @@ function parseArgs(cliArgs: string[]): {
     console.log("\nOptions:");
     console.log("  --tone <informative|casual|professional|dramatic|humorous|storytelling>");
     console.log("  --complexity <simple|medium|detailed>");
+    console.log("  --style <cinematic|educational|bold|playful|premium|documentary>");
+    console.log("  --audience <general|beginners|students|creators|founders|executives|professionals>");
+    console.log("  --platform <tiktok|reels|shorts|vertical>");
+    console.log("  --intensity <safe|balanced|wild>");
+    console.log("  --motion <minimal|medium|high>");
+    console.log("  --density <minimal|balanced|rich>");
+    console.log("  --narrative <problem-solution|myth-busting|timeline|comparison|transformation>");
+    console.log("  --audio-mood <text>");
+    console.log("  --focus <full|hook|middle|outro>");
     console.log("  --aspect <9:16|16:9|1:1|4:5|4:3>  Aspect ratio (default: 9:16)");
     console.log("  --output <path>");
     console.log("  --no-images    Skip fetching images");
+    console.log("  --brief <text>  Extra creative brief for the AI");
     console.log("  --use-ai       Use Z.ai for script generation");
     console.log("\nAspect Ratios:");
     console.log("  9:16   Vertical video (TikTok, Reels, Shorts)");
@@ -76,8 +86,8 @@ function parseArgs(cliArgs: string[]): {
     console.log("  ZAI_MODEL            Optional model name");
     console.log("\nExamples:");
     console.log("  npm run generate -- \"AI\" --use-ai");
-    console.log("  npm run generate -- \"Space\" --tone storytelling --aspect 16:9");
-    console.log("  npm run generate -- \"Tech\" --aspect 1:1 --use-ai");
+    console.log("  npm run generate -- \"Space\" --tone storytelling --aspect 16:9 --style documentary");
+    console.log("  npm run generate -- \"Tech\" --aspect 1:1 --use-ai --audience founders");
     process.exit(1);
   }
 
@@ -95,6 +105,27 @@ function parseArgs(cliArgs: string[]): {
       case "--complexity":
         options.complexity = cliArgs[++i] as any;
         break;
+      case "--style":
+        options.stylePreset = cliArgs[++i] as any;
+        break;
+      case "--audience":
+        options.audience = cliArgs[++i] as any;
+        break;
+      case "--platform":
+        options.platform = cliArgs[++i] as any;
+        break;
+      case "--intensity":
+        options.intensity = cliArgs[++i] as any;
+        break;
+      case "--motion":
+        options.motionLevel = cliArgs[++i] as any;
+        break;
+      case "--density":
+        options.visualDensity = cliArgs[++i] as any;
+        break;
+      case "--narrative":
+        options.narrativeTemplate = cliArgs[++i] as any;
+        break;
       case "--aspect":
         const ratio = cliArgs[++i] as AspectRatio;
         if (ratio in aspectRatioPresets) {
@@ -110,6 +141,15 @@ function parseArgs(cliArgs: string[]): {
         break;
       case "--no-images":
         fetchImages = false;
+        break;
+      case "--brief":
+        options.brief = cliArgs[++i];
+        break;
+      case "--audio-mood":
+        options.audioMood = cliArgs[++i];
+        break;
+      case "--focus":
+        options.focus = cliArgs[++i] as any;
         break;
       case "--use-ai":
         options.useAI = true;
@@ -249,7 +289,12 @@ function downloadImageDirect(url: string, outputPath: string): Promise<void> {
 }
 
 // Generate a temporary Root file with the generated script
-async function createTempRoot(script: any, images: any[], aspectRatio: AspectRatio) {
+async function createTempRoot(
+  script: any,
+  images: any[],
+  aspectRatio: AspectRatio,
+  options: GenerateScriptOptions
+) {
   const preset = aspectRatioPresets[aspectRatio];
   const rootTemplate = `import { Composition } from "remotion";
 import { ExplainerVideo } from "./compositions/ExplainerVideo";
@@ -268,6 +313,12 @@ export const RemotionRoot = () => {
         colorScheme: "default",
         aspectRatio: "${aspectRatio}",
         fontSizeScale: ${preset.fontSizeScale},
+        stylePreset: ${JSON.stringify(options.stylePreset || "cinematic")},
+        audience: ${JSON.stringify(options.audience || "general")},
+        platform: ${JSON.stringify(options.platform || "vertical")},
+        intensity: ${JSON.stringify(options.intensity || "balanced")},
+        motionLevel: ${JSON.stringify(options.motionLevel || "medium")},
+        visualDensity: ${JSON.stringify(options.visualDensity || "balanced")},
       }}
       durationInFrames={900}
       fps={30}
@@ -314,6 +365,12 @@ async function main() {
   console.log(`📚 Topic:    ${topic}`);
   console.log(`🎭 Tone:     ${options.tone || "informative"}`);
   console.log(`📊 Level:    ${options.complexity || "medium"}`);
+  console.log(`🎨 Style:    ${options.stylePreset || "cinematic"}`);
+  console.log(`👥 Audience: ${options.audience || "general"}`);
+  console.log(`📺 Platform: ${options.platform || "vertical"}`);
+  console.log(`⚡ Motion:   ${options.motionLevel || "medium"}`);
+  console.log(`🎧 Audio:    ${options.audioMood || "auto"}`);
+  console.log(`🎯 Focus:    ${options.focus || "full"}`);
   const aiMode = options.useAI
     ? (options.apiKey ? "Yes (Z.ai)" : "Yes (Demo Mode)")
     : "No (Template)";
@@ -343,7 +400,7 @@ async function main() {
   await ensureOutputDir(outputPath);
 
   // Create temporary Root with generated script
-  const { rootPath, indexPath } = await createTempRoot(script, images, aspectRatio);
+  const { rootPath, indexPath } = await createTempRoot(script, images, aspectRatio, options);
 
   try {
     // Bundle the Remotion project

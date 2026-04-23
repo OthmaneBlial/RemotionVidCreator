@@ -1,0 +1,26 @@
+[
+  {
+    "narrativeTemplate": "problem-solution",
+    "intensity": "balanced",
+    "qualityScore": 83,
+    "complexity": "medium",
+    "audioMood": "",
+    "focus": "full",
+    "prompt": "Explain why solar energy is becoming cheaper than coal in plain language.",
+    "state": "complete",
+    "seconds": 10,
+    "audience": "general",
+    "progress": 100,
+    "brief": "",
+    "id": "89093544",
+    "outputPath": "/home/othmane/Downloads/remotion/output/ai-mode/explain-why-solar-energy-is-becoming-cheaper-than-coal-in-plain--1775339266398.mp4",
+    "tone": "informative",
+    "stage": "done",
+    "message": "Video finished and saved locally.",
+    "stylePreset": "cinematic",
+    "platform": "vertical",
+    "motionLevel": "medium",
+    "visualDensity": "balanced",
+    "updatedAt": 1775339374060
+  }
+]

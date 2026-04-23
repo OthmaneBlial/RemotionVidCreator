@@ -11,3 +11,6 @@ output/
 *.mov
 *.webm
 src/root.generated.tsx
+
+# Local planning and Unsplash submission assets
+base/

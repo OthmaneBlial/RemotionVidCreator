@@ -1,11 +1,13 @@
 {
   "name": "remotion-explainer-generator",
   "version": "1.0.0",
-  "description": "Generate explainer videos from any topic using Remotion",
+  "description": "AI video generator for topic-driven social videos with licensed image sourcing",
   "type": "module",
   "scripts": {
-    "start": "remotion studio",
-    "ai": "tsx bin/ai-mode.ts",
+    "start": "npm run dev",
+    "dev": "tsx bin/ai-mode.ts",
+    "ai": "npm run dev",
+    "backend": "python3 backend/server.py",
     "build": "remotion render",
     "generate": "tsx bin/generate-video.ts",
     "typecheck": "tsc --noEmit"

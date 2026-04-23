@@ -59,6 +59,7 @@ const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const CACHE_DIR = path.join(process.cwd(), ".cache");
 const RATE_LIMIT_FILE = path.join(CACHE_DIR, "unsplash-rate-limit.json");
 const CACHE_FILE = path.join(CACHE_DIR, "unsplash-search-cache.json");
+const UNSPLASH_UTM_SOURCE = process.env.UNSPLASH_UTM_SOURCE?.trim() || "remotion-ai-video-generator";
 
 const lock = createMutex();
 
@@ -262,6 +263,13 @@ function buildPhotoUrl(photo: UnsplashPhoto, width: number, height: number): str
   return raw.toString();
 }
 
+function buildProfileUrl(url: string): string {
+  const profile = new URL(url);
+  profile.searchParams.set("utm_source", UNSPLASH_UTM_SOURCE);
+  profile.searchParams.set("utm_medium", "referral");
+  return profile.toString();
+}
+
 function dedupePhotos(photos: UnsplashPhoto[]): UnsplashPhoto[] {
   const seen = new Set<string>();
   const unique: UnsplashPhoto[] = [];
@@ -316,7 +324,7 @@ export async function fetchUnsplashImages(
         src: buildPhotoUrl(photo, width, height),
         alt: photo.alt_description || photo.description || topic,
         author: photo.user.name,
-        authorUrl: photo.user.links.html,
+        authorUrl: buildProfileUrl(photo.user.links.html),
         photoId: photo.id,
         sourceQuery: query,
       });
