@@ -4,6 +4,26 @@ Generate engaging explainer videos from any topic using Remotion. The system res
 
 The app now uses a Python backend for job orchestration and Unsplash rate tracking, while the browser frontend stays focused on prompting, status, and review.
 
+## Product Direction
+
+This repository is now locked to a single supported user workflow: AI video generation.
+
+Stays:
+
+- AI mode as the primary creation flow
+- Python-backed orchestration, progress tracking, and render execution
+- Unsplash sourcing, hotlinking, download tracking, and attribution
+
+Goes:
+
+- Editor-first navigation and manual timeline editing as a product path
+- Generic studio-style positioning that implies a broader editing suite
+
+Renamed:
+
+- User-facing wording should favor `AI mode`, `creation console`, or `creation workspace`
+- `Studio` is reserved for Remotion's technical preview tooling, not the product identity
+
 ## Features
 
 - **Auto-generated scripts**: Researches topics and structures content into hooks, sections, outros, and scene plans
@@ -199,7 +219,7 @@ Edit `src/components/Background.tsx` to add new color schemes.
 # Type check
 npm run typecheck
 
-# Preview in Remotion Studio
+# Preview locally in Remotion Studio for technical inspection
 npm start
 
 # Render with custom props
