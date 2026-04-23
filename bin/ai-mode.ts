@@ -949,7 +949,7 @@ function renderHtml() {
         <div class="brand-mark">A</div>
         <div class="brand-copy">
           <strong>AI Video Mode</strong>
-          <span>Backend-driven video studio with live job tracking</span>
+          <span>Backend-driven AI video workspace with live job tracking</span>
         </div>
       </div>
       <div class="topbar-actions">
