@@ -515,6 +515,27 @@ function renderHtml() {
       font-size: 12px;
       line-height: 1.5;
     }
+    .starter-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .starter-prompt {
+      border: 1px solid rgba(141, 220, 255, 0.16);
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+    .starter-prompt:hover {
+      transform: translateY(-1px);
+      border-color: rgba(141, 220, 255, 0.5);
+      background: rgba(141, 220, 255, 0.08);
+    }
     .card {
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
@@ -690,6 +711,88 @@ function renderHtml() {
     }
     .panel {
       padding: 18px;
+    }
+    .preview-card {
+      display: grid;
+      gap: 12px;
+    }
+    .preview-pane {
+      display: grid;
+      gap: 12px;
+    }
+    .preview-frame {
+      min-height: 240px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background:
+        radial-gradient(circle at 18% 18%, rgba(141, 220, 255, 0.3), transparent 30%),
+        radial-gradient(circle at 82% 20%, rgba(255, 184, 107, 0.22), transparent 24%),
+        linear-gradient(160deg, rgba(9, 17, 28, 0.98), rgba(16, 20, 33, 0.94));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 18px 40px rgba(0,0,0,0.28);
+      padding: 18px;
+      display: grid;
+      align-content: end;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-frame::after {
+      content: "";
+      position: absolute;
+      inset: auto -12% -30% auto;
+      width: 170px;
+      height: 170px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(142, 247, 199, 0.34), transparent 68%);
+      filter: blur(10px);
+      opacity: 0.8;
+    }
+    .preview-kicker {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.09);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .preview-title {
+      margin: 0;
+      max-width: 12ch;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      position: relative;
+      z-index: 1;
+    }
+    .preview-copy {
+      margin: 0;
+      color: rgba(233, 245, 255, 0.78);
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 34ch;
+      position: relative;
+      z-index: 1;
+    }
+    .preview-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .preview-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 11px;
+      color: var(--muted-strong);
     }
     .panel + .panel {
       margin-top: 0;
@@ -963,6 +1066,13 @@ function renderHtml() {
               </div>
               <p>Write the topic in plain language. Add details only if you want tighter audience, tone, or platform control.</p>
             </div>
+            <div class="starter-prompts" aria-label="Starter suggestions">
+              <button class="starter-prompt" type="button" data-suggestion="Why solar energy is becoming cheaper than coal">Solar energy costs</button>
+              <button class="starter-prompt" type="button" data-suggestion="Explain how AI agents can save a small team hours every week">AI agents for teams</button>
+              <button class="starter-prompt" type="button" data-suggestion="Show why creator-led brands are growing faster than ads">Creator economy</button>
+              <button class="starter-prompt" type="button" data-suggestion="Explain the future of electric cars in plain language">Future of EVs</button>
+            </div>
+          </div>
 
           <div class="field">
             <label for="prompt">Topic or idea</label>
@@ -1097,6 +1207,14 @@ function renderHtml() {
       </div>
 
       <aside class="right-rail">
+        <section class="card panel preview-card">
+          <div class="section-title">
+            <strong>Output preview</strong>
+            <span>Latest render at a glance</span>
+          </div>
+          <div id="previewPane" class="preview-pane" aria-live="polite"></div>
+        </section>
+
         <section class="card panel">
           <div class="section-title">
             <strong>Quick presets</strong>
@@ -1232,7 +1350,9 @@ function renderHtml() {
     const percentEl = document.getElementById("percent");
     const logEl = document.getElementById("log");
     const historyEl = document.getElementById("history");
+    const previewEl = document.getElementById("previewPane");
     const presetChips = document.getElementById("presetChips");
+    const starterPrompts = document.querySelector(".starter-prompts");
     const resetButton = document.getElementById("reset");
     let pollTimer = null;
     let activeJobId = null;
@@ -1244,6 +1364,52 @@ function renderHtml() {
         const preset = chip.getAttribute("data-preset");
         chip.classList.toggle("active", preset === stylePresetEl.value);
       });
+    }
+
+    function renderPreview(item) {
+      if (!previewEl) return;
+      if (!item) {
+        previewEl.innerHTML = [
+          '<div class="preview-frame">',
+          '<div class="preview-kicker">Fresh start</div>',
+          '<h3 class="preview-title">Your first render will appear here.</h3>',
+          '<p class="preview-copy">Use a starter prompt or write your own idea. The preview updates once you generate a video.</p>',
+          '<div class="preview-meta">',
+          '<span class="preview-chip">AI mode</span>',
+          '<span class="preview-chip">Live render</span>',
+          '<span class="preview-chip">Unsplash credits</span>',
+          '</div>',
+          '</div>',
+        ].join("");
+        return;
+      }
+
+      const tags = [
+        item.stylePreset,
+        item.audience,
+        item.platform,
+      ].filter(Boolean);
+
+      previewEl.innerHTML = [
+        '<div class="preview-frame">',
+        '<div class="preview-kicker">Latest output</div>',
+        '<h3 class="preview-title">',
+        item.prompt,
+        '</h3>',
+        '<p class="preview-copy">',
+        item.qualityScore ? 'Quality score ' + item.qualityScore + '/100. ' : '',
+        'Created ',
+        new Date(item.updatedAt).toLocaleDateString(),
+        ' with a ',
+        item.stylePreset || 'custom',
+        ' finish.',
+        '</p>',
+        '<div class="preview-meta">',
+        tags.map((tag) => '<span class="preview-chip">' + tag + '</span>').join(''),
+        item.outputPath ? '<span class="preview-chip">Exported</span>' : '<span class="preview-chip">Queued</span>',
+        '</div>',
+        '</div>',
+      ].join("");
     }
 
     function applyDefaults() {
@@ -1339,6 +1505,7 @@ function renderHtml() {
       if (!historyEl) return;
       if (!items || !items.length) {
         historyEl.innerHTML = "<div class='panel-copy'>No generations yet.</div>";
+        renderPreview(null);
         return;
       }
       historyEl.innerHTML = items.map((item) => {
@@ -1385,10 +1552,12 @@ function renderHtml() {
         }
         const items = await response.json();
         renderHistory(items);
+        renderPreview(items[0] || null);
       } catch (error) {
         if (historyEl) {
           historyEl.innerHTML = "<div class='subvalue'>" + String(error) + "</div>";
         }
+        renderPreview(null);
       }
     }
 
@@ -1479,6 +1648,16 @@ function renderHtml() {
       target.blur();
     });
 
+    starterPrompts?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const suggestion = target.getAttribute("data-suggestion");
+      if (!suggestion) return;
+      promptEl.value = suggestion;
+      promptEl.focus();
+      promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
     stylePresetEl.addEventListener("change", syncPresetChips);
 
     historyEl?.addEventListener("click", async (event) => {
@@ -1515,6 +1694,7 @@ function renderHtml() {
     });
 
     applyDefaults();
+    renderPreview(null);
     refreshBudget();
     refreshHistory();
     usageTimer = setInterval(refreshBudget, 60000);
