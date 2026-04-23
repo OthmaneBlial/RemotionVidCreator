@@ -473,9 +473,9 @@ function renderHtml() {
     }
     .hero {
       text-align: center;
-      padding: 30px 0 26px;
+      padding: 24px 0 22px;
       display: grid;
-      gap: 16px;
+      gap: 12px;
     }
     .eyebrow {
       font-size: 11px;
@@ -499,13 +499,21 @@ function renderHtml() {
       line-height: 1.6;
       max-width: 68ch;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: 1.28fr 0.9fr;
-      gap: 22px;
-      align-items: start;
-      min-height: 0;
-      margin-top: 16px;
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .hero-link {
+      text-decoration: none;
+    }
+    .hero-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
     }
     .card {
       border: 1px solid var(--line);
@@ -885,31 +893,6 @@ function renderHtml() {
       min-width: 160px;
       flex: 0 1 180px;
     }
-    .intro-cards {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .intro-card {
-      padding: 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      display: grid;
-      gap: 10px;
-      min-height: 132px;
-    }
-    .intro-card h3 {
-      margin: 0;
-      font-size: 14px;
-      letter-spacing: -0.02em;
-    }
-    .intro-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.55;
-    }
     @media (max-width: 900px) {
       .topbar {
         position: static;
@@ -923,7 +906,6 @@ function renderHtml() {
       .right-rail {
         position: static;
       }
-      .intro-cards,
       .preset-grid,
       .field-grid {
         grid-template-columns: 1fr;
@@ -960,37 +942,26 @@ function renderHtml() {
 
     <section class="hero">
       <div class="eyebrow">AI mode</div>
-      <h1>Build a cinematic video from a single idea.</h1>
+      <h1>Build a cinematic video from one clear idea.</h1>
       <p class="lede">
-        The Python backend writes the script, plans scenes, pulls licensed visuals, generates an audio bed, and renders everything while this frontend stays focused on control and visibility.
+        Start with a topic or a full brief below. The app turns it into a script, scene plan, licensed visuals, an audio bed, and the final render.
       </p>
-    </section>
-
-    <section class="intro-cards">
-      <article class="intro-card">
-        <h3>Designed for clarity</h3>
-        <p>Large inputs, clear sections, sticky status, and actual scrolling. No cramped dashboard clutter.</p>
-      </article>
-      <article class="intro-card">
-        <h3>Driven by the backend</h3>
-        <p>The frontend only submits jobs and shows state. Python handles generation, caching, and usage tracking.</p>
-      </article>
-      <article class="intro-card">
-        <h3>Rich customization</h3>
-        <p>Control tone, style, audience, platform, motion, density, narrative structure, and audio mood.</p>
-      </article>
+      <div class="hero-actions">
+        <a class="button hero-link" href="#creation-brief">Start with the brief</a>
+        <div class="hero-note">No editor steps, no extra tabs, no dead-end navigation.</div>
+      </div>
     </section>
 
     <section class="workspace">
       <div class="stack">
-        <div class="card">
+        <div class="card" id="creation-brief">
           <div class="composer">
             <div class="composer-head">
               <div class="section-title">
-                <strong>Creative brief</strong>
-                <span>Start with the idea, then tune the style</span>
+                <strong>Creation brief</strong>
+                <span>One idea in, one finished video out</span>
               </div>
-              <p>Write the topic in plain language. The AI will turn it into a visual script with scene direction and pacing.</p>
+              <p>Write the topic in plain language. Add details only if you want tighter audience, tone, or platform control.</p>
             </div>
 
           <div class="field">
@@ -1143,10 +1114,10 @@ function renderHtml() {
 
         <section class="card panel stage-card">
           <div class="stage-header">
-            <div class="panel-title">Creative system</div>
+            <div class="panel-title">Creation assistant</div>
             <span class="pill">Live composition</span>
           </div>
-          <p class="stage-copy">The UI is centered on one task: turn an idea into a finished video without crowding the screen.</p>
+          <p class="stage-copy">The first screen stays focused on the brief, the current job, and the next useful action.</p>
           <div class="preset-grid">
             <div class="preset-card">
               <div class="preset-name">Hook</div>
