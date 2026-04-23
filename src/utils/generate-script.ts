@@ -53,6 +53,9 @@ export interface CreativeDirection {
   visualDensity: VisualDensity;
   typography: string;
   palette: string;
+  pacing: "calm" | "steady" | "fast";
+  motionSignature: string;
+  audioMood: string;
   narrativeTemplate: NarrativeTemplate;
 }
 
@@ -383,6 +386,7 @@ async function generateAIScript(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    motionSignature?: string;
     goal?: string;
     pacing?: "calm" | "steady" | "fast";
     brief?: string;
@@ -445,6 +449,7 @@ function buildAIPrompt(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    motionSignature?: string;
     goal?: string;
     pacing?: "calm" | "steady" | "fast";
     brief?: string;
@@ -477,8 +482,10 @@ function buildAIPrompt(
 - Motion level: ${creative.motionLevel}
 - Visual density: ${creative.visualDensity}
 - Narrative template: ${creative.narrativeTemplate}
+- Motion signature: ${creative.motionSignature || "steady cinematic motion"}
 - Goal: ${creative.goal || "not specified"}
 - Pacing: ${creative.pacing || "steady"}
+- Audio feel: ${creative.audioMood || "auto"}
 - Optional brief: ${creative.brief || "none"}
 - Brand color: ${creative.brandColor || "auto"}
 - Accent color: ${creative.accentColor || "auto"}`
@@ -545,7 +552,7 @@ ${audioMoodLine}
   "outro": "Outro text here...",
   "audioMood": "One short line describing the background audio bed",
   "cta": "Short call to action",
-  "creativeDirection": {
+    "creativeDirection": {
     "stylePreset": "${creative?.stylePreset || "cinematic"}",
     "audience": "${creative?.audience || "general"}",
     "platform": "${creative?.platform || "vertical"}",
@@ -554,7 +561,10 @@ ${audioMoodLine}
     "visualDensity": "${creative?.visualDensity || "balanced"}",
     "typography": "Short phrase describing typography",
     "palette": "Short phrase describing palette",
-    "narrativeTemplate": "${creative?.narrativeTemplate || "problem-solution"}"
+    "narrativeTemplate": "${creative?.narrativeTemplate || "problem-solution"}",
+    "pacing": "${creative?.pacing || "steady"}",
+    "motionSignature": "Short phrase describing motion language",
+    "audioMood": "Short phrase describing audio feel"
   },
   "scenePlan": [
     {
@@ -622,7 +632,7 @@ function parseAIResponse(
 
     // Generate color scheme based on topic
     const palette = generateColorScheme(topic, creative?.stylePreset, creative?.accentColor || creative?.brandColor);
-    const creativeDirection = parsed.creativeDirection || buildCreativeDirection({
+    const fallbackCreativeDirection = buildCreativeDirection({
       topic,
       tone,
       stylePreset: creative?.stylePreset || "cinematic",
@@ -634,6 +644,12 @@ function parseAIResponse(
       narrativeTemplate: creative?.narrativeTemplate || "problem-solution",
       brief: creative?.brief,
     });
+    const creativeDirection = parsed.creativeDirection
+      ? {
+          ...fallbackCreativeDirection,
+          ...parsed.creativeDirection,
+        }
+      : fallbackCreativeDirection;
     const sections = parsed.sections.map((section: any, index: number) => ({
       title: section.title || `Section ${index + 1}`,
       content: section.content || "",
@@ -963,6 +979,22 @@ function buildCreativeDirection(options: {
     premium: "Elegant editorial typography with restraint",
     documentary: "Measured, journalistic typography with clarity",
   };
+  const pacingByStyle: Record<StylePreset, "calm" | "steady" | "fast"> = {
+    cinematic: "steady",
+    educational: "calm",
+    bold: "fast",
+    playful: "fast",
+    premium: "calm",
+    documentary: "steady",
+  };
+  const motionByStyle: Record<StylePreset, string> = {
+    cinematic: "Sweeping pushes, layered transitions, and cinematic reveals",
+    educational: "Clear cuts, gentle movement, and steady emphasis",
+    bold: "Snappy cuts, strong contrast, and immediate visual hits",
+    playful: "Bouncy motion, lively transitions, and expressive accents",
+    premium: "Controlled motion with luxurious spacing and restraint",
+    documentary: "Measured motion, grounded framing, and authentic pacing",
+  };
 
   return {
     stylePreset: options.stylePreset,
@@ -974,6 +1006,22 @@ function buildCreativeDirection(options: {
     narrativeTemplate: options.narrativeTemplate,
     typography: typographyByStyle[options.stylePreset],
     palette: `${options.stylePreset} palette`,
+    pacing: pacingByStyle[options.stylePreset],
+    motionSignature: motionByStyle[options.stylePreset],
+    audioMood: buildAudioMood({
+      stylePreset: options.stylePreset,
+      audience: options.audience,
+      platform: options.platform,
+      intensity: options.intensity,
+      motionLevel: options.motionLevel,
+      visualDensity: options.visualDensity,
+      typography: typographyByStyle[options.stylePreset],
+      palette: `${options.stylePreset} palette`,
+      pacing: pacingByStyle[options.stylePreset],
+      motionSignature: motionByStyle[options.stylePreset],
+      audioMood: "",
+      narrativeTemplate: options.narrativeTemplate,
+    }),
   };
 }
 

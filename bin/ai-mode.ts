@@ -673,6 +673,42 @@ function renderHtml() {
       flex-wrap: wrap;
       gap: 8px;
     }
+    .preset-guide {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(141, 220, 255, 0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      display: grid;
+      gap: 8px;
+    }
+    .preset-guide strong {
+      font-size: 13px;
+      letter-spacing: -0.02em;
+    }
+    .preset-guide p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .preset-guide-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .preset-guide-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted-strong);
+      font-size: 11px;
+      white-space: nowrap;
+    }
     .chip {
       padding: 8px 12px;
       border-radius: 999px;
@@ -1249,6 +1285,7 @@ function renderHtml() {
             <button class="chip" data-preset="premium">Premium</button>
             <button class="chip" data-preset="documentary">Documentary</button>
           </div>
+          <div class="preset-guide" id="presetGuide"></div>
         </section>
 
         <section class="card panel stage-card">
@@ -1377,6 +1414,7 @@ function renderHtml() {
     const historyEl = document.getElementById("history");
     const previewEl = document.getElementById("previewPane");
     const presetChips = document.getElementById("presetChips");
+    const presetGuideEl = document.getElementById("presetGuide");
     const starterPrompts = document.querySelector(".starter-prompts");
     const resetButton = document.getElementById("reset");
     let pollTimer = null;
@@ -1384,11 +1422,99 @@ function renderHtml() {
     let usageTimer = null;
     let historyTimer = null;
 
+    const PRESET_GUIDES = {
+      cinematic: {
+        title: "Cinematic",
+        summary: "High-contrast titles, sweeping motion, and a dramatic but controlled pace.",
+        typography: "Editorial title case",
+        motion: "Sweeping pushes and layered transitions",
+        palette: "Midnight tones with bright highlights",
+        pacing: "Steady",
+        audio: "Cinematic ambient pulse",
+      },
+      educational: {
+        title: "Educational",
+        summary: "Clear spacing, legible titles, and a calm structure that explains fast.",
+        typography: "Highly legible instructional framing",
+        motion: "Gentle cuts and measured emphasis",
+        palette: "Clean blues and signal whites",
+        pacing: "Calm",
+        audio: "Clean ambient bed",
+      },
+      bold: {
+        title: "Bold",
+        summary: "Compact headlines, strong contrast, and a faster rhythm for attention.",
+        typography: "Condensed headline type",
+        motion: "Snappy cuts and strong visual hits",
+        palette: "Dark base with bright accent flashes",
+        pacing: "Fast",
+        audio: "Percussive pulse",
+      },
+      playful: {
+        title: "Playful",
+        summary: "Rounded type, lively motion, and a lighter mood that feels expressive.",
+        typography: "Friendly rounded type",
+        motion: "Bouncy transitions and expressive accents",
+        palette: "Bright accent mix with friendly contrast",
+        pacing: "Fast",
+        audio: "Bright rhythmic bed",
+      },
+      premium: {
+        title: "Premium",
+        summary: "Elegant spacing, restrained movement, and an expensive editorial feel.",
+        typography: "Elegant editorial typography",
+        motion: "Controlled motion with soft reveal timing",
+        palette: "Black, gold, and polished neutrals",
+        pacing: "Calm",
+        audio: "Polished atmospheric bed",
+      },
+      documentary: {
+        title: "Documentary",
+        summary: "Measured motion and grounded framing that makes the topic feel credible.",
+        typography: "Measured journalistic type",
+        motion: "Stable framing and authentic pacing",
+        palette: "Steel blues and muted neutrals",
+        pacing: "Steady",
+        audio: "Textured ambient score",
+      },
+    };
+
     function syncPresetChips() {
       presetChips?.querySelectorAll(".chip").forEach((chip) => {
         const preset = chip.getAttribute("data-preset");
         chip.classList.toggle("active", preset === stylePresetEl.value);
       });
+      renderPresetGuide();
+    }
+
+    function renderPresetGuide() {
+      if (!presetGuideEl) return;
+      const guide = PRESET_GUIDES[stylePresetEl.value] || PRESET_GUIDES.cinematic;
+      presetGuideEl.innerHTML = [
+        '<strong>',
+        guide.title,
+        '</strong>',
+        '<p>',
+        guide.summary,
+        '</p>',
+        '<div class="preset-guide-meta">',
+        '<span class="preset-guide-chip">Typography: ',
+        guide.typography,
+        '</span>',
+        '<span class="preset-guide-chip">Motion: ',
+        guide.motion,
+        '</span>',
+        '<span class="preset-guide-chip">Pacing: ',
+        guide.pacing,
+        '</span>',
+        '<span class="preset-guide-chip">Audio: ',
+        guide.audio,
+        '</span>',
+        '</div>',
+        '<div class="preset-guide-chip">Palette: ',
+        guide.palette,
+        '</div>',
+      ].join("");
     }
 
     function renderPreview(item) {
