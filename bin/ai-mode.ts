@@ -1230,6 +1230,7 @@ function renderHtml() {
                 <option value="reels">Reels</option>
                 <option value="shorts">Shorts</option>
               </select>
+              <div class="field-hint" id="platformHint"></div>
             </div>
             <div class="field">
               <label for="intensity">Intensity</label>
@@ -1433,6 +1434,7 @@ function renderHtml() {
     const audienceEl = document.getElementById("audience");
     const audienceHintEl = document.getElementById("audienceHint");
     const platformEl = document.getElementById("platform");
+    const platformHintEl = document.getElementById("platformHint");
     const intensityEl = document.getElementById("intensity");
     const motionLevelEl = document.getElementById("motionLevel");
     const visualDensityEl = document.getElementById("visualDensity");
@@ -1578,6 +1580,33 @@ function renderHtml() {
       },
     };
 
+    const PLATFORM_GUIDES = {
+      vertical: {
+        title: "Vertical video",
+        summary: "A broad default for mobile-first social video.",
+        hook: "Strong opening, medium pacing, and flexible caption density.",
+        length: "Works well as the neutral default when you want platform flexibility.",
+      },
+      tiktok: {
+        title: "TikTok",
+        summary: "Faster hooks, tighter pacing, and more immediate payoff.",
+        hook: "Start hot and keep the structure compact.",
+        length: "Best when the intro lands instantly and every beat earns its place.",
+      },
+      reels: {
+        title: "Reels",
+        summary: "Clean, polished, and visually smooth with shareable momentum.",
+        hook: "Keep the opening crisp and visually appealing.",
+        length: "Best when the middle stays light and the finish feels easy to save.",
+      },
+      shorts: {
+        title: "Shorts",
+        summary: "Direct, brisk, and optimized for fast comprehension.",
+        hook: "Go straight to the point and keep the rhythm moving.",
+        length: "Best when the payoff is obvious and the CTA feels natural.",
+      },
+    };
+
     const PRESET_GUIDES = {
       cinematic: {
         title: "Cinematic",
@@ -1718,6 +1747,27 @@ function renderHtml() {
       ].join("");
     }
 
+    function renderPlatformHint() {
+      if (!platformHintEl) return;
+      const guide = PLATFORM_GUIDES[platformEl.value] || PLATFORM_GUIDES.vertical;
+      platformHintEl.innerHTML = [
+        '<strong style="display:block;color:var(--text);margin-bottom:6px;">',
+        guide.title,
+        '</strong>',
+        '<div style="display:grid;gap:6px;">',
+        '<div>',
+        guide.summary,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Hook:</span> ',
+        guide.hook,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Length:</span> ',
+        guide.length,
+        '</div>',
+        '</div>',
+      ].join("");
+    }
+
     function renderPreview(item) {
       if (!previewEl) return;
       if (!item) {
@@ -1787,6 +1837,7 @@ function renderHtml() {
       syncPresetChips();
       renderToneHint();
       renderAudienceHint();
+      renderPlatformHint();
     }
 
     function setUi(job) {
@@ -2026,6 +2077,7 @@ function renderHtml() {
     stylePresetEl.addEventListener("change", syncPresetChips);
     toneEl.addEventListener("change", renderToneHint);
     audienceEl.addEventListener("change", renderAudienceHint);
+    platformEl.addEventListener("change", renderPlatformHint);
     toneEl.addEventListener("change", renderToneHint);
 
     historyEl?.addEventListener("click", async (event) => {
@@ -2056,6 +2108,7 @@ function renderHtml() {
       syncPresetChips();
       renderToneHint();
       renderAudienceHint();
+      renderPlatformHint();
       promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
