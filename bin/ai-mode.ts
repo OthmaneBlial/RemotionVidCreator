@@ -32,6 +32,8 @@ type JobState = {
   motionLevel: "minimal" | "medium" | "high";
   visualDensity: "minimal" | "balanced" | "rich";
   narrativeTemplate: "problem-solution" | "myth-busting" | "timeline" | "comparison" | "transformation";
+  goal: string;
+  pacing: "calm" | "steady" | "fast";
   brief: string;
   audioMood: string;
   focus: "full" | "hook" | "middle" | "outro";
@@ -80,6 +82,8 @@ function scoreGeneration(job: JobState, script: Awaited<ReturnType<typeof genera
   score += script.cta ? 5 : 0;
   score += script.audioMood ? 5 : 0;
   score += script.creativeDirection ? 10 : 0;
+  score += job.goal ? 4 : 0;
+  score += job.pacing ? 3 : 0;
   score += job.brief ? 5 : 0;
   score += job.visualDensity === "rich" ? 5 : 0;
   score += job.intensity === "wild" ? 3 : 0;
@@ -182,6 +186,8 @@ async function runJob(jobId: string) {
       motionLevel: job.motionLevel,
       visualDensity: job.visualDensity,
       narrativeTemplate: job.narrativeTemplate,
+      goal: job.goal,
+      pacing: job.pacing,
       brief: job.brief,
       audioMood: job.audioMood,
       focus: job.focus,
@@ -1074,6 +1080,21 @@ function renderHtml() {
             </div>
           </div>
 
+          <div class="field-grid">
+            <div class="field">
+              <label for="goal">Goal</label>
+              <input id="goal" type="text" placeholder="Educate, persuade, compare, inspire" />
+            </div>
+            <div class="field">
+              <label for="pacing">Pacing</label>
+              <select id="pacing">
+                <option value="calm">Calm</option>
+                <option value="steady" selected>Steady</option>
+                <option value="fast">Fast</option>
+              </select>
+            </div>
+          </div>
+
           <div class="field">
             <label for="prompt">Topic or idea</label>
             <textarea id="prompt" placeholder="Example: Explain why solar energy is becoming cheaper than coal in plain language.">Explain why solar energy is becoming cheaper than coal in plain language.</textarea>
@@ -1310,6 +1331,8 @@ function renderHtml() {
   <script>
     const DEFAULTS = {
       prompt: "Explain why solar energy is becoming cheaper than coal in plain language.",
+      goal: "Educate viewers clearly",
+      pacing: "steady",
       brief: "",
       seconds: "45",
       tone: "informative",
@@ -1326,6 +1349,8 @@ function renderHtml() {
     };
 
     const promptEl = document.getElementById("prompt");
+    const goalEl = document.getElementById("goal");
+    const pacingEl = document.getElementById("pacing");
     const briefEl = document.getElementById("brief");
     const secondsEl = document.getElementById("seconds");
     const toneEl = document.getElementById("tone");
@@ -1376,6 +1401,7 @@ function renderHtml() {
           '<p class="preview-copy">Use a starter prompt or write your own idea. The preview updates once you generate a video.</p>',
           '<div class="preview-meta">',
           '<span class="preview-chip">AI mode</span>',
+          '<span class="preview-chip">Goal-driven</span>',
           '<span class="preview-chip">Live render</span>',
           '<span class="preview-chip">Unsplash credits</span>',
           '</div>',
@@ -1388,6 +1414,7 @@ function renderHtml() {
         item.stylePreset,
         item.audience,
         item.platform,
+        item.pacing,
       ].filter(Boolean);
 
       previewEl.innerHTML = [
@@ -1398,6 +1425,7 @@ function renderHtml() {
         '</h3>',
         '<p class="preview-copy">',
         item.qualityScore ? 'Quality score ' + item.qualityScore + '/100. ' : '',
+        item.goal ? 'Goal: ' + item.goal + '. ' : '',
         'Created ',
         new Date(item.updatedAt).toLocaleDateString(),
         ' with a ',
@@ -1414,6 +1442,8 @@ function renderHtml() {
 
     function applyDefaults() {
       promptEl.value = DEFAULTS.prompt;
+      goalEl.value = DEFAULTS.goal;
+      pacingEl.value = DEFAULTS.pacing;
       briefEl.value = DEFAULTS.brief;
       secondsEl.value = DEFAULTS.seconds;
       toneEl.value = DEFAULTS.tone;
@@ -1453,6 +1483,8 @@ function renderHtml() {
       percentEl.textContent = Math.max(0, Math.min(100, job.progress || 0)) + "%";
       logEl.textContent = [
         "Prompt: " + job.prompt,
+        job.goal ? "Goal: " + job.goal : null,
+        "Pacing: " + job.pacing,
         job.brief ? "Brief: " + job.brief : null,
         "Duration: " + job.seconds + "s",
         "Tone: " + job.tone,
@@ -1582,6 +1614,8 @@ function renderHtml() {
 
     button.addEventListener("click", async () => {
       const prompt = promptEl.value.trim();
+      const goal = goalEl.value.trim();
+      const pacing = pacingEl.value;
       const brief = briefEl.value.trim();
       const seconds = Number(secondsEl.value || 5);
       const tone = toneEl.value;
@@ -1610,6 +1644,8 @@ function renderHtml() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
+          goal,
+          pacing,
           brief,
           seconds,
           tone,
@@ -1670,6 +1706,8 @@ function renderHtml() {
       const item = items.find((entry) => entry.id === itemId);
       if (!item) return;
       promptEl.value = item.prompt || promptEl.value;
+      goalEl.value = item.goal || goalEl.value;
+      pacingEl.value = item.pacing || pacingEl.value;
       briefEl.value = item.brief || briefEl.value;
       secondsEl.value = String(item.seconds || secondsEl.value);
       toneEl.value = item.tone || toneEl.value;

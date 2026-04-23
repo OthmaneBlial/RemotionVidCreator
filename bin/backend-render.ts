@@ -27,6 +27,8 @@ type JobPayload = {
   motionLevel: "minimal" | "medium" | "high";
   visualDensity: "minimal" | "balanced" | "rich";
   narrativeTemplate: "problem-solution" | "myth-busting" | "timeline" | "comparison" | "transformation";
+  goal: string;
+  pacing: "calm" | "steady" | "fast";
   brief: string;
   audioMood: string;
   focus: "full" | "hook" | "middle" | "outro";
@@ -62,6 +64,8 @@ function scoreGeneration(payload: JobPayload, script: Awaited<ReturnType<typeof 
   score += script.cta ? 5 : 0;
   score += script.audioMood ? 5 : 0;
   score += script.creativeDirection ? 10 : 0;
+  score += payload.goal ? 4 : 0;
+  score += payload.pacing ? 3 : 0;
   score += payload.brief ? 5 : 0;
   score += payload.visualDensity === "rich" ? 5 : 0;
   score += payload.intensity === "wild" ? 3 : 0;
@@ -95,6 +99,8 @@ async function main() {
     motionLevel: payload.motionLevel,
     visualDensity: payload.visualDensity,
     narrativeTemplate: payload.narrativeTemplate,
+    goal: payload.goal,
+    pacing: payload.pacing,
     brief: payload.brief,
     audioMood: payload.audioMood,
     focus: payload.focus,

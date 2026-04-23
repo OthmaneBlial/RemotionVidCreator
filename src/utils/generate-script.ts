@@ -95,6 +95,8 @@ export interface GenerateScriptOptions {
   motionLevel?: MotionLevel;
   visualDensity?: VisualDensity;
   narrativeTemplate?: NarrativeTemplate;
+  goal?: string;
+  pacing?: "calm" | "steady" | "fast";
   brief?: string;
   accentColor?: string;
   brandColor?: string;
@@ -123,6 +125,8 @@ export async function generateScript(
     motionLevel = "medium",
     visualDensity = "balanced",
     narrativeTemplate = "problem-solution",
+    goal,
+    pacing = "steady",
     brief,
     accentColor,
     brandColor,
@@ -149,6 +153,8 @@ export async function generateScript(
           motionLevel,
           visualDensity,
           narrativeTemplate,
+          goal,
+          pacing,
           brief,
           accentColor,
           brandColor,
@@ -172,6 +178,8 @@ export async function generateScript(
           motionLevel,
           visualDensity,
           narrativeTemplate,
+          goal,
+          pacing,
           brief,
           accentColor,
           brandColor,
@@ -201,6 +209,8 @@ export async function generateScript(
       motionLevel,
       visualDensity,
       narrativeTemplate,
+      goal,
+      pacing,
       brief,
       accentColor,
       brandColor,
@@ -219,6 +229,8 @@ export async function generateScript(
       motionLevel,
       visualDensity,
       narrativeTemplate,
+      goal,
+      pacing,
       brief,
       accentColor,
       brandColor,
@@ -246,6 +258,8 @@ async function generateMockAIScript(options: {
   motionLevel: MotionLevel;
   visualDensity: VisualDensity;
   narrativeTemplate: NarrativeTemplate;
+  goal?: string;
+  pacing?: "calm" | "steady" | "fast";
   brief?: string;
   accentColor?: string;
   brandColor?: string;
@@ -264,6 +278,8 @@ async function generateMockAIScript(options: {
     motionLevel,
     visualDensity,
     narrativeTemplate,
+    goal,
+    pacing,
     brief,
     accentColor,
     brandColor,
@@ -321,7 +337,7 @@ async function generateMockAIScript(options: {
     ],
   };
 
-  const sectionTemplates = buildSectionTemplates(topic, tone, complexity, direction, brief);
+  const sectionTemplates = buildSectionTemplates(topic, tone, complexity, direction, brief, goal, pacing);
   const mockScript = {
     title: topic,
     hook: emphasizeHook(pick(toneHookBank[tone] || toneHookBank.informative), focus),
@@ -367,6 +383,8 @@ async function generateAIScript(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    goal?: string;
+    pacing?: "calm" | "steady" | "fast";
     brief?: string;
     accentColor?: string;
     brandColor?: string;
@@ -427,6 +445,8 @@ function buildAIPrompt(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    goal?: string;
+    pacing?: "calm" | "steady" | "fast";
     brief?: string;
     accentColor?: string;
     brandColor?: string;
@@ -457,6 +477,8 @@ function buildAIPrompt(
 - Motion level: ${creative.motionLevel}
 - Visual density: ${creative.visualDensity}
 - Narrative template: ${creative.narrativeTemplate}
+- Goal: ${creative.goal || "not specified"}
+- Pacing: ${creative.pacing || "steady"}
 - Optional brief: ${creative.brief || "none"}
 - Brand color: ${creative.brandColor || "auto"}
 - Accent color: ${creative.accentColor || "auto"}`
@@ -492,6 +514,8 @@ ${audioMoodLine}
 - Make it memorable and shareable
 - Avoid clichés unless used intentionally
 - Make the story feel tailored to the audience
+- Keep the pacing aligned with the requested speed
+- Shape the payoff around the stated goal
 - Make the visuals feel deliberate, not generic
 - Add a short audio mood line for a background bed
 - Add image keyword ideas for each section and topic
@@ -564,6 +588,8 @@ function parseAIResponse(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    goal?: string;
+    pacing?: "calm" | "steady" | "fast";
     brief?: string;
     accentColor?: string;
     brandColor?: string;
@@ -696,6 +722,8 @@ function buildScriptFromSearch(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    goal?: string;
+    pacing?: "calm" | "steady" | "fast";
     brief?: string;
     accentColor?: string;
     brandColor?: string;
@@ -1046,22 +1074,31 @@ function buildSectionTemplates(
   tone: string,
   complexity: string,
   direction: CreativeDirection,
-  brief?: string
+  brief?: string,
+  goal?: string,
+  pacing?: "calm" | "steady" | "fast"
 ): Array<{ title: string; content: string }> {
+  const goalLine = goal ? `The goal is to ${goal}. ` : "";
+  const paceLine =
+    pacing === "fast"
+      ? "Keep the language tight, punchy, and momentum-driven."
+      : pacing === "calm"
+        ? "Keep the language measured, clear, and easy to absorb."
+        : "Keep the language steady and easy to follow.";
   const firstSection =
     direction.narrativeTemplate === "myth-busting"
       ? {
           title: "The myth vs the truth",
-          content: `${topic} gets explained in a lot of confusing ways. The simple version: ${brief || "it solves a real-world problem with a clearer, faster approach."}`,
+          content: `${topic} gets explained in a lot of confusing ways. ${goalLine}${brief || "it solves a real-world problem with a clearer, faster approach."} ${paceLine}`,
         }
       : direction.narrativeTemplate === "timeline"
         ? {
             title: "How it got here",
-            content: `${topic} did not appear overnight. It evolved through pressure, experimentation, and a shift in what people needed.`,
+            content: `${topic} did not appear overnight. It evolved through pressure, experimentation, and a shift in what people needed. ${goalLine}${paceLine}`,
           }
         : {
             title: "The core idea",
-            content: `${topic} is easier to understand when you strip away the noise and focus on the main job it does.`,
+            content: `${topic} is easier to understand when you strip away the noise and focus on the main job it does. ${goalLine}${paceLine}`,
           };
 
   const secondSection =
@@ -1071,24 +1108,24 @@ function buildSectionTemplates(
           content: `Compared with older approaches, ${topic} is often faster, clearer, or more scalable depending on the use case.`,
         }
       : direction.narrativeTemplate === "transformation"
-        ? {
-            title: "What changes when you use it",
-            content: `Once you understand ${topic}, the way you make decisions, build things, or explain the problem gets sharper.`,
-          }
-        : {
-            title: "Why it matters",
-            content: `${topic} matters because it changes the outcome in ways people actually notice.`,
-          };
+      ? {
+          title: "What changes when you use it",
+          content: `Once you understand ${topic}, the way you make decisions, build things, or explain the problem gets sharper. ${paceLine}`,
+        }
+      : {
+          title: "Why it matters",
+          content: `${topic} matters because it changes the outcome in ways people actually notice. ${goalLine}${paceLine}`,
+        };
 
   const thirdSection =
     complexity === "detailed"
       ? {
           title: "What to remember",
-          content: `The main thing to remember about ${topic} is how it changes tradeoffs. That is where the real value shows up.`,
+          content: `The main thing to remember about ${topic} is how it changes tradeoffs. That is where the real value shows up. ${goalLine}${paceLine}`,
         }
       : {
           title: "The takeaway",
-          content: `The short version: ${topic} is worth understanding because it keeps showing up in real decisions.`,
+          content: `The short version: ${topic} is worth understanding because it keeps showing up in real decisions. ${goalLine}${paceLine}`,
         };
 
   return [firstSection, secondSection, thirdSection];
@@ -1104,6 +1141,8 @@ function generateTemplateScript(
     motionLevel: MotionLevel;
     visualDensity: VisualDensity;
     narrativeTemplate: NarrativeTemplate;
+    goal?: string;
+    pacing?: "calm" | "steady" | "fast";
     brief?: string;
     accentColor?: string;
     brandColor?: string;
@@ -1130,7 +1169,15 @@ function generateTemplateScript(
   return {
     title: topic,
     hook: emphasizeHook(generateHook(topic, creative?.tone || "informative"), creative?.focus),
-    sections: buildSectionTemplates(topic, creative?.tone || "informative", "medium", direction, creative?.brief).map((section) => ({
+    sections: buildSectionTemplates(
+      topic,
+      creative?.tone || "informative",
+      "medium",
+      direction,
+      creative?.brief,
+      creative?.goal,
+      creative?.pacing
+    ).map((section) => ({
       ...section,
       imageKeywords: generateImageKeywords(topic, section.title, direction.stylePreset),
     })),
@@ -1142,7 +1189,15 @@ function generateTemplateScript(
     topicImages: generateImageKeywords(topic, "overview", direction.stylePreset),
     audioMood: creative?.audioMood || buildAudioMood(direction),
     estimatedDurationSeconds: creative?.targetDurationSeconds,
-    scenePlan: buildScenePlan(topic, buildSectionTemplates(topic, creative?.tone || "informative", "medium", direction, creative?.brief).map((section) => ({
+    scenePlan: buildScenePlan(topic, buildSectionTemplates(
+      topic,
+      creative?.tone || "informative",
+      "medium",
+      direction,
+      creative?.brief,
+      creative?.goal,
+      creative?.pacing
+    ).map((section) => ({
       ...section,
       imageKeywords: generateImageKeywords(topic, section.title, direction.stylePreset),
     })), direction),
