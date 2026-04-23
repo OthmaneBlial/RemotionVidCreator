@@ -652,6 +652,16 @@ function renderHtml() {
       font-size: 12px;
       line-height: 1.5;
     }
+    .field-hint {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(141, 220, 255, 0.12);
+      background: rgba(255,255,255,0.035);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
     .stack {
       display: grid;
       gap: 14px;
@@ -1210,6 +1220,7 @@ function renderHtml() {
                 <option value="executives">Executives</option>
                 <option value="professionals">Professionals</option>
               </select>
+              <div class="field-hint" id="audienceHint"></div>
             </div>
             <div class="field">
               <label for="platform">Platform</label>
@@ -1420,6 +1431,7 @@ function renderHtml() {
     const complexityEl = document.getElementById("complexity");
     const stylePresetEl = document.getElementById("stylePreset");
     const audienceEl = document.getElementById("audience");
+    const audienceHintEl = document.getElementById("audienceHint");
     const platformEl = document.getElementById("platform");
     const intensityEl = document.getElementById("intensity");
     const motionLevelEl = document.getElementById("motionLevel");
@@ -1518,6 +1530,51 @@ function renderHtml() {
         range: "subtle-to-urgent",
         script: "Immediate hooks, tighter edits, and direct payoff language.",
         visual: "Quick cuts and strong accent beats.",
+      },
+    };
+
+    const AUDIENCE_GUIDES = {
+      general: {
+        title: "General audience",
+        summary: "Balanced vocabulary and examples that work for most viewers.",
+        depth: "Clear and approachable, without assuming deep background knowledge.",
+        examples: "Broad, everyday examples and simple comparisons.",
+      },
+      beginners: {
+        title: "Beginners",
+        summary: "Slow the explanation down and define the basics early.",
+        depth: "Gentle onboarding with fewer assumptions and more context.",
+        examples: "Simple analogies, step-by-step framing, and low jargon.",
+      },
+      students: {
+        title: "Students",
+        summary: "A learning-first angle that feels structured and memorable.",
+        depth: "Explain the why behind each idea and use useful takeaways.",
+        examples: "Classroom-friendly examples, definitions, and recap moments.",
+      },
+      creators: {
+        title: "Creators",
+        summary: "Practical and visual, with an emphasis on hooks and audience retention.",
+        depth: "Shorter phrasing and examples that map to content-making decisions.",
+        examples: "Attention, pacing, format, and shareability examples.",
+      },
+      founders: {
+        title: "Founders",
+        summary: "Sharper business framing with decisions, tradeoffs, and growth context.",
+        depth: "Condense detail into strategy, leverage, and opportunity signals.",
+        examples: "Market size, product decisions, and business impact examples.",
+      },
+      executives: {
+        title: "Executives",
+        summary: "Executive-ready language with high signal and low noise.",
+        depth: "Tighter structure, clearer implications, and fewer digressions.",
+        examples: "Strategic risk, efficiency, and leadership decisions.",
+      },
+      professionals: {
+        title: "Professionals",
+        summary: "Clear, confident, and useful for people who already know the field.",
+        depth: "Professional vocabulary with precise examples and practical payoff.",
+        examples: "Workflows, tooling, and domain-specific examples.",
       },
     };
 
@@ -1640,6 +1697,27 @@ function renderHtml() {
       ].join("");
     }
 
+    function renderAudienceHint() {
+      if (!audienceHintEl) return;
+      const guide = AUDIENCE_GUIDES[audienceEl.value] || AUDIENCE_GUIDES.general;
+      audienceHintEl.innerHTML = [
+        '<strong style="display:block;color:var(--text);margin-bottom:6px;">',
+        guide.title,
+        '</strong>',
+        '<div style="display:grid;gap:6px;">',
+        '<div>',
+        guide.summary,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Depth:</span> ',
+        guide.depth,
+        '</div>',
+        '<div><span style="color:var(--muted-strong);">Examples:</span> ',
+        guide.examples,
+        '</div>',
+        '</div>',
+      ].join("");
+    }
+
     function renderPreview(item) {
       if (!previewEl) return;
       if (!item) {
@@ -1708,6 +1786,7 @@ function renderHtml() {
       focusEl.value = DEFAULTS.focus;
       syncPresetChips();
       renderToneHint();
+      renderAudienceHint();
     }
 
     function setUi(job) {
@@ -1946,6 +2025,7 @@ function renderHtml() {
 
     stylePresetEl.addEventListener("change", syncPresetChips);
     toneEl.addEventListener("change", renderToneHint);
+    audienceEl.addEventListener("change", renderAudienceHint);
     toneEl.addEventListener("change", renderToneHint);
 
     historyEl?.addEventListener("click", async (event) => {
@@ -1975,6 +2055,7 @@ function renderHtml() {
       focusEl.value = target.getAttribute("data-history-focus") || item.focus || focusEl.value;
       syncPresetChips();
       renderToneHint();
+      renderAudienceHint();
       promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
