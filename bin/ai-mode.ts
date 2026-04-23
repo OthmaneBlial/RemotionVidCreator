@@ -342,7 +342,7 @@ function renderHtml() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Video Mode</title>
+  <title>RemotionVidCreator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1103,27 +1103,27 @@ function renderHtml() {
   <main class="shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark">A</div>
+        <div class="brand-mark">R</div>
         <div class="brand-copy">
-          <strong>AI Video Mode</strong>
-          <span>Backend-driven AI video workspace with live job tracking</span>
+          <strong>RemotionVidCreator</strong>
+          <span>Simple AI video workspace</span>
         </div>
       </div>
       <div class="topbar-actions">
         <div class="pill"><span class="pill-dot"></span><span id="statusPill">Ready</span></div>
-        <div class="pill">Unsplash usage: <strong id="budgetInline">--</strong></div>
+        <div class="pill">Usage <strong id="budgetInline">--</strong></div>
       </div>
     </header>
 
     <section class="hero">
-      <div class="eyebrow">AI mode</div>
-      <h1>Build a cinematic video from one clear idea.</h1>
+      <div class="eyebrow">Create</div>
+      <h1>Make a video from one idea.</h1>
       <p class="lede">
-        Start with a topic or a full brief below. The app turns it into a script, scene plan, licensed visuals, an audio bed, and the final render.
+        Write a topic. The app handles the script, visuals, audio, and render.
       </p>
       <div class="hero-actions">
-        <a class="button hero-link" href="#creation-brief">Start with the brief</a>
-        <div class="hero-note">No editor steps, no extra tabs, no dead-end navigation.</div>
+        <a class="button hero-link" href="#creation-brief">Start</a>
+        <div class="hero-note">No extra tabs.</div>
       </div>
     </section>
 
@@ -1133,16 +1133,16 @@ function renderHtml() {
           <div class="composer">
             <div class="composer-head">
               <div class="section-title">
-                <strong>Creation brief</strong>
-                <span>One idea in, one finished video out</span>
+                <strong>Brief</strong>
+                <span>One idea in, one video out</span>
               </div>
-              <p>Write the topic in plain language. Add details only if you want tighter audience, tone, or platform control.</p>
+              <p>Keep it short. Add detail only when you need it.</p>
             </div>
             <div class="starter-prompts" aria-label="Starter suggestions">
-              <button class="starter-prompt" type="button" data-suggestion="Why solar energy is becoming cheaper than coal">Solar energy costs</button>
-              <button class="starter-prompt" type="button" data-suggestion="Explain how AI agents can save a small team hours every week">AI agents for teams</button>
-              <button class="starter-prompt" type="button" data-suggestion="Show why creator-led brands are growing faster than ads">Creator economy</button>
-              <button class="starter-prompt" type="button" data-suggestion="Explain the future of electric cars in plain language">Future of EVs</button>
+              <button class="starter-prompt" type="button" data-suggestion="Why solar energy is becoming cheaper than coal">Solar</button>
+              <button class="starter-prompt" type="button" data-suggestion="Explain how AI agents can save a small team hours every week">Teams</button>
+              <button class="starter-prompt" type="button" data-suggestion="Show why creator-led brands are growing faster than ads">Creators</button>
+              <button class="starter-prompt" type="button" data-suggestion="Explain the future of electric cars in plain language">EVs</button>
             </div>
           </div>
 
@@ -1166,8 +1166,8 @@ function renderHtml() {
             <textarea id="prompt" placeholder="Example: Explain why solar energy is becoming cheaper than coal in plain language.">Explain why solar energy is becoming cheaper than coal in plain language.</textarea>
           </div>
           <div class="field">
-            <label for="brief">Creative brief</label>
-            <textarea id="brief" class="brief" placeholder="Optional: add audience, angle, brand voice, or specific points to include."></textarea>
+            <label for="brief">Notes</label>
+            <textarea id="brief" class="brief" placeholder="Optional details."></textarea>
           </div>
           <div class="field-grid four">
             <div class="field">
@@ -1270,12 +1270,12 @@ function renderHtml() {
               <label for="audioMood">Audio mood</label>
               <select id="audioMood">
                 <option value="">Auto</option>
-                <option value="Cinematic ambient pulse with rising energy and low-end movement">Cinematic</option>
-                <option value="Clean ambient bed with steady pulse and minimal distraction">Clean</option>
-                <option value="Percussive pulse with sharp accents and forward momentum">Percussive</option>
-                <option value="Bright rhythmic bed with light percussion and bounce">Bright</option>
-                <option value="Polished atmospheric bed with restrained tension">Premium</option>
-                <option value="Textured ambient score with subtle tension and space">Textured</option>
+              <option value="Cinematic pulse">Cinematic</option>
+              <option value="Clean bed">Clean</option>
+              <option value="Percussive pulse">Percussive</option>
+              <option value="Bright rhythm">Bright</option>
+              <option value="Polished bed">Premium</option>
+              <option value="Textured score">Textured</option>
               </select>
             </div>
             <div class="field">
@@ -1289,12 +1289,12 @@ function renderHtml() {
             </div>
           </div>
           <div class="composer-actions">
-            <button id="generate" class="button">Generate video</button>
-            <button id="reset" class="button secondary" type="button">Reset to defaults</button>
+            <button id="generate" class="button">Generate</button>
+            <button id="reset" class="button secondary" type="button">Reset</button>
           </div>
           <div class="foot">
-            <div>Uses <code>.env</code> automatically.</div>
-            <div>Output saves to <code>output/ai-mode</code>.</div>
+            <div>Uses <code>.env</code>.</div>
+            <div>Saves to <code>output/ai-mode</code>.</div>
           </div>
         </div>
         </div>
@@ -1303,16 +1303,16 @@ function renderHtml() {
       <aside class="right-rail">
         <section class="card panel preview-card">
           <div class="section-title">
-            <strong>Output preview</strong>
-            <span>Latest render at a glance</span>
+            <strong>Preview</strong>
+            <span>Latest render</span>
           </div>
           <div id="previewPane" class="preview-pane" aria-live="polite"></div>
         </section>
 
         <section class="card panel">
           <div class="section-title">
-            <strong>Quick presets</strong>
-            <span>Tap to steer the mood</span>
+            <strong>Styles</strong>
+            <span>Tap one</span>
           </div>
           <div class="chips" id="presetChips">
             <button class="chip" data-preset="cinematic">Cinematic</button>
@@ -1327,26 +1327,26 @@ function renderHtml() {
 
         <section class="card panel stage-card">
           <div class="stage-header">
-            <div class="panel-title">Creation assistant</div>
-            <span class="pill">Live composition</span>
+            <div class="panel-title">Flow</div>
+            <span class="pill">Live</span>
           </div>
-          <p class="stage-copy">The first screen stays focused on the brief, the current job, and the next useful action.</p>
+          <p class="stage-copy">Brief, status, next step.</p>
           <div class="preset-grid">
             <div class="preset-card">
               <div class="preset-name">Hook</div>
-              <div class="preset-copy">Sharper opening language and immediate visual intent.</div>
+              <div class="preset-copy">Stronger first line.</div>
             </div>
             <div class="preset-card">
               <div class="preset-name">Scenes</div>
-              <div class="preset-copy">Sections become a structured plan with pacing and mood.</div>
+              <div class="preset-copy">Clear sections.</div>
             </div>
             <div class="preset-card">
               <div class="preset-name">Fallback</div>
-              <div class="preset-copy">Missing visuals are handled as part of the design, not a bug.</div>
+              <div class="preset-copy">Missing visuals still look good.</div>
             </div>
             <div class="preset-card">
               <div class="preset-name">Audio</div>
-              <div class="preset-copy">The score adapts to tone, tempo, and energy.</div>
+              <div class="preset-copy">Audio matches the tone.</div>
             </div>
           </div>
         </section>
@@ -1354,30 +1354,30 @@ function renderHtml() {
         <section class="card panel-stack">
           <div class="panel">
             <div class="section-title">
-              <strong>Current status</strong>
-              <span>Backend job state</span>
+              <strong>Status</strong>
+              <span>Backend</span>
             </div>
             <div class="status-banner">
               <div class="label">State</div>
               <div class="value" id="status">Idle</div>
-              <div class="subvalue" id="statusMeta">Ready when you are.</div>
+              <div class="subvalue" id="statusMeta">Ready.</div>
             </div>
           </div>
           <div class="panel">
             <div class="section-title">
               <strong>Usage</strong>
-              <span>Unsplash requests</span>
+              <span>Unsplash</span>
             </div>
             <div class="metrics">
               <div class="metric">
                 <div class="label">Remaining</div>
                 <div class="value" id="budget">Loading...</div>
-                <div class="subvalue" id="budgetMeta">Checking local request cache.</div>
+                <div class="subvalue" id="budgetMeta">Checking usage.</div>
               </div>
               <div class="metric">
                 <div class="label">Progress</div>
                 <div class="value" id="percent">0%</div>
-                <div class="subvalue">From script to render.</div>
+                <div class="subvalue">Script to render.</div>
               </div>
             </div>
             <div style="margin-top: 12px;" class="progress" aria-label="Generation progress">
@@ -1386,17 +1386,17 @@ function renderHtml() {
           </div>
           <div class="panel">
             <div class="section-title">
-              <strong>Recent generations</strong>
-              <span>Reuse and remix</span>
+              <strong>History</strong>
+              <span>Reuse</span>
             </div>
             <div class="timeline" id="history">Loading history...</div>
           </div>
           <div class="panel">
             <div class="section-title">
-              <strong>Job log</strong>
-              <span>Readable trace</span>
+              <strong>Log</strong>
+              <span>Trace</span>
             </div>
-            <div class="log" id="log">Waiting for a prompt.</div>
+            <div class="log" id="log">Waiting.</div>
           </div>
         </section>
       </aside>
@@ -1465,202 +1465,202 @@ function renderHtml() {
     const TONE_GUIDES = {
       informative: {
         title: "Informative",
-        summary: "Clear, direct, and structured for explanation-first videos.",
-        range: "steady-to-clear",
-        script: "Simple phrasing, fast clarity, and practical examples.",
-        visual: "Measured motion with clean emphasis.",
+        summary: "Clear and direct.",
+        range: "Steady",
+        script: "Plain phrasing.",
+        visual: "Clean emphasis.",
       },
       casual: {
         title: "Casual",
-        summary: "Friendly and relaxed, like a good voice note with structure.",
-        range: "relaxed-to-steady",
-        script: "Conversational language and approachable transitions.",
-        visual: "Soft motion and warm pacing.",
+        summary: "Friendly and relaxed.",
+        range: "Loose",
+        script: "Conversational lines.",
+        visual: "Soft motion.",
       },
       professional: {
         title: "Professional",
-        summary: "Polished and credible for founder, business, and expert topics.",
-        range: "steady-to-controlled",
-        script: "Concise sentences, sharper framing, and fewer flourishes.",
-        visual: "Controlled motion with crisp visual hierarchy.",
+        summary: "Polished and credible.",
+        range: "Controlled",
+        script: "Short, precise lines.",
+        visual: "Crisp hierarchy.",
       },
       dramatic: {
         title: "Dramatic",
-        summary: "High contrast and heavier emphasis for big stakes.",
-        range: "subtle-to-dramatic",
-        script: "Stronger breaks, sharper reveals, and higher tension.",
-        visual: "Bold transitions and punchy framing.",
+        summary: "High contrast, high stakes.",
+        range: "Strong",
+        script: "Sharper reveals.",
+        visual: "Bold transitions.",
       },
       humorous: {
         title: "Humorous",
-        summary: "Light, playful, and tuned for wit without losing clarity.",
-        range: "playful-to-energetic",
-        script: "Shorter lines, timing beats, and a little surprise.",
-        visual: "Quick motion and expressive cuts.",
+        summary: "Light and playful.",
+        range: "Punchy",
+        script: "Short lines, good timing.",
+        visual: "Quick cuts.",
       },
       storytelling: {
         title: "Storytelling",
-        summary: "Narrative flow that builds tension and payoff scene by scene.",
-        range: "calm-to-immersive",
-        script: "Scene-to-scene progression with stronger callbacks.",
-        visual: "Gentle movement and cinematic continuity.",
+        summary: "Scene by scene.",
+        range: "Immersive",
+        script: "Clear progression.",
+        visual: "Smooth continuity.",
       },
       calm: {
         title: "Calm",
-        summary: "Slow, thoughtful, and easy to absorb.",
-        range: "quiet-to-calm",
-        script: "Longer breaths, soft transitions, and measured language.",
-        visual: "Minimal motion and soft contrast.",
+        summary: "Slow and easy.",
+        range: "Quiet",
+        script: "Gentle pacing.",
+        visual: "Minimal motion.",
       },
       energetic: {
         title: "Energetic",
-        summary: "Punchy, forward, and built to keep attention moving.",
-        range: "steady-to-energetic",
-        script: "Short lines, faster rhythm, and active verbs.",
-        visual: "Faster motion and brighter contrast.",
+        summary: "Fast and punchy.",
+        range: "Bright",
+        script: "Short, active lines.",
+        visual: "Brighter contrast.",
       },
       subtle: {
         title: "Subtle",
-        summary: "Understated and refined, with less hype and more nuance.",
-        range: "subtle-to-controlled",
-        script: "Lower-volume language with smoother pacing.",
-        visual: "Quiet motion and restrained emphasis.",
+        summary: "Understated and refined.",
+        range: "Soft",
+        script: "Lower-volume language.",
+        visual: "Quiet motion.",
       },
       urgent: {
         title: "Urgent",
-        summary: "Fast-moving and time-sensitive without becoming noisy.",
-        range: "subtle-to-urgent",
-        script: "Immediate hooks, tighter edits, and direct payoff language.",
-        visual: "Quick cuts and strong accent beats.",
+        summary: "Fast and time-sensitive.",
+        range: "Direct",
+        script: "Immediate hooks.",
+        visual: "Quick cuts.",
       },
     };
 
     const AUDIENCE_GUIDES = {
       general: {
         title: "General audience",
-        summary: "Balanced vocabulary and examples that work for most viewers.",
-        depth: "Clear and approachable, without assuming deep background knowledge.",
-        examples: "Broad, everyday examples and simple comparisons.",
+        summary: "Broad and approachable.",
+        depth: "Clear basics.",
+        examples: "Everyday examples.",
       },
       beginners: {
         title: "Beginners",
-        summary: "Slow the explanation down and define the basics early.",
-        depth: "Gentle onboarding with fewer assumptions and more context.",
-        examples: "Simple analogies, step-by-step framing, and low jargon.",
+        summary: "Start simple.",
+        depth: "Gentle onboarding.",
+        examples: "Simple analogies.",
       },
       students: {
         title: "Students",
-        summary: "A learning-first angle that feels structured and memorable.",
-        depth: "Explain the why behind each idea and use useful takeaways.",
-        examples: "Classroom-friendly examples, definitions, and recap moments.",
+        summary: "Learning first.",
+        depth: "Explain the why.",
+        examples: "Definitions and recaps.",
       },
       creators: {
         title: "Creators",
-        summary: "Practical and visual, with an emphasis on hooks and audience retention.",
-        depth: "Shorter phrasing and examples that map to content-making decisions.",
-        examples: "Attention, pacing, format, and shareability examples.",
+        summary: "Practical and visual.",
+        depth: "Short, useful phrasing.",
+        examples: "Hooks and retention.",
       },
       founders: {
         title: "Founders",
-        summary: "Sharper business framing with decisions, tradeoffs, and growth context.",
-        depth: "Condense detail into strategy, leverage, and opportunity signals.",
-        examples: "Market size, product decisions, and business impact examples.",
+        summary: "Business framing.",
+        depth: "Strategy first.",
+        examples: "Tradeoffs and growth.",
       },
       executives: {
         title: "Executives",
-        summary: "Executive-ready language with high signal and low noise.",
-        depth: "Tighter structure, clearer implications, and fewer digressions.",
-        examples: "Strategic risk, efficiency, and leadership decisions.",
+        summary: "High signal.",
+        depth: "Tight structure.",
+        examples: "Risk and impact.",
       },
       professionals: {
         title: "Professionals",
-        summary: "Clear, confident, and useful for people who already know the field.",
-        depth: "Professional vocabulary with precise examples and practical payoff.",
-        examples: "Workflows, tooling, and domain-specific examples.",
+        summary: "Clear and precise.",
+        depth: "Practical detail.",
+        examples: "Workflows and tools.",
       },
     };
 
     const PLATFORM_GUIDES = {
       vertical: {
         title: "Vertical video",
-        summary: "A broad default for mobile-first social video.",
-        hook: "Strong opening, medium pacing, and flexible caption density.",
-        length: "Works well as the neutral default when you want platform flexibility.",
+        summary: "Mobile-first default.",
+        hook: "Strong opening.",
+        length: "Flexible format.",
       },
       tiktok: {
         title: "TikTok",
-        summary: "Faster hooks, tighter pacing, and more immediate payoff.",
-        hook: "Start hot and keep the structure compact.",
-        length: "Best when the intro lands instantly and every beat earns its place.",
+        summary: "Fast hooks.",
+        hook: "Start hot.",
+        length: "Keep it tight.",
       },
       reels: {
         title: "Reels",
-        summary: "Clean, polished, and visually smooth with shareable momentum.",
-        hook: "Keep the opening crisp and visually appealing.",
-        length: "Best when the middle stays light and the finish feels easy to save.",
+        summary: "Clean and smooth.",
+        hook: "Keep it crisp.",
+        length: "Easy to save.",
       },
       shorts: {
         title: "Shorts",
-        summary: "Direct, brisk, and optimized for fast comprehension.",
-        hook: "Go straight to the point and keep the rhythm moving.",
-        length: "Best when the payoff is obvious and the CTA feels natural.",
+        summary: "Direct and brisk.",
+        hook: "Go straight in.",
+        length: "Fast payoff.",
       },
     };
 
     const PRESET_GUIDES = {
       cinematic: {
         title: "Cinematic",
-        summary: "High-contrast titles, sweeping motion, and a dramatic but controlled pace.",
-        typography: "Editorial title case",
-        motion: "Sweeping pushes and layered transitions",
-        palette: "Midnight tones with bright highlights",
+        summary: "Dramatic, but clean.",
+        typography: "Editorial type",
+        motion: "Sweeping pushes",
+        palette: "Dark tones",
         pacing: "Steady",
-        audio: "Cinematic ambient pulse",
+        audio: "Ambient pulse",
       },
       educational: {
         title: "Educational",
-        summary: "Clear spacing, legible titles, and a calm structure that explains fast.",
-        typography: "Highly legible instructional framing",
-        motion: "Gentle cuts and measured emphasis",
-        palette: "Clean blues and signal whites",
+        summary: "Clear and legible.",
+        typography: "Simple framing",
+        motion: "Gentle cuts",
+        palette: "Clean blues",
         pacing: "Calm",
-        audio: "Clean ambient bed",
+        audio: "Clean bed",
       },
       bold: {
         title: "Bold",
-        summary: "Compact headlines, strong contrast, and a faster rhythm for attention.",
-        typography: "Condensed headline type",
-        motion: "Snappy cuts and strong visual hits",
-        palette: "Dark base with bright accent flashes",
+        summary: "Strong contrast.",
+        typography: "Condensed type",
+        motion: "Snappy cuts",
+        palette: "Dark base",
         pacing: "Fast",
         audio: "Percussive pulse",
       },
       playful: {
         title: "Playful",
-        summary: "Rounded type, lively motion, and a lighter mood that feels expressive.",
-        typography: "Friendly rounded type",
-        motion: "Bouncy transitions and expressive accents",
-        palette: "Bright accent mix with friendly contrast",
+        summary: "Light and lively.",
+        typography: "Rounded type",
+        motion: "Bouncy transitions",
+        palette: "Bright accents",
         pacing: "Fast",
-        audio: "Bright rhythmic bed",
+        audio: "Bright rhythm",
       },
       premium: {
         title: "Premium",
-        summary: "Elegant spacing, restrained movement, and an expensive editorial feel.",
-        typography: "Elegant editorial typography",
-        motion: "Controlled motion with soft reveal timing",
-        palette: "Black, gold, and polished neutrals",
+        summary: "Elegant and restrained.",
+        typography: "Editorial type",
+        motion: "Controlled motion",
+        palette: "Black and gold",
         pacing: "Calm",
-        audio: "Polished atmospheric bed",
+        audio: "Polished bed",
       },
       documentary: {
         title: "Documentary",
-        summary: "Measured motion and grounded framing that makes the topic feel credible.",
-        typography: "Measured journalistic type",
-        motion: "Stable framing and authentic pacing",
-        palette: "Steel blues and muted neutrals",
+        summary: "Grounded and credible.",
+        typography: "Journal type",
+        motion: "Stable framing",
+        palette: "Muted neutrals",
         pacing: "Steady",
-        audio: "Textured ambient score",
+        audio: "Textured score",
       },
     };
 
@@ -1773,13 +1773,12 @@ function renderHtml() {
       if (!item) {
         previewEl.innerHTML = [
           '<div class="preview-frame">',
-          '<div class="preview-kicker">Fresh start</div>',
-          '<h3 class="preview-title">Your first render will appear here.</h3>',
-          '<p class="preview-copy">Use a starter prompt or write your own idea. The preview updates once you generate a video.</p>',
+          '<div class="preview-kicker">Start</div>',
+          '<h3 class="preview-title">Your render shows here.</h3>',
+          '<p class="preview-copy">Use a starter prompt or write your own idea.</p>',
           '<div class="preview-meta">',
           '<span class="preview-chip">AI mode</span>',
-          '<span class="preview-chip">Goal-driven</span>',
-          '<span class="preview-chip">Live render</span>',
+          '<span class="preview-chip">Simple</span>',
           '<span class="preview-chip">Unsplash credits</span>',
           '</div>',
           '</div>',
@@ -1796,18 +1795,18 @@ function renderHtml() {
 
       previewEl.innerHTML = [
         '<div class="preview-frame">',
-        '<div class="preview-kicker">Latest output</div>',
+        '<div class="preview-kicker">Latest</div>',
         '<h3 class="preview-title">',
         item.prompt,
         '</h3>',
         '<p class="preview-copy">',
-        item.qualityScore ? 'Quality score ' + item.qualityScore + '/100. ' : '',
-        item.goal ? 'Goal: ' + item.goal + '. ' : '',
-        'Created ',
+        item.qualityScore ? 'Score ' + item.qualityScore + '/100. ' : '',
+        item.goal ? item.goal + '. ' : '',
+        'Updated ',
         new Date(item.updatedAt).toLocaleDateString(),
-        ' with a ',
+        ' • ',
         item.stylePreset || 'custom',
-        ' finish.',
+        '.',
         '</p>',
         '<div class="preview-meta">',
         tags.map((tag) => '<span class="preview-chip">' + tag + '</span>').join(''),
@@ -1849,16 +1848,16 @@ function renderHtml() {
       statusEl.textContent = statusText;
       statusPillEl.textContent = statusText;
       statusMetaEl.textContent = job.stage === "render"
-        ? "Rendering now. The bar is live."
+        ? "Rendering."
         : job.stage === "bundle"
-          ? "Bundling assets and composition."
+          ? "Bundling."
           : job.stage === "visuals"
-            ? "Finding licensed visuals."
+            ? "Finding visuals."
             : job.stage === "audio"
-              ? "Building the audio bed."
+              ? "Building audio."
               : job.stage === "script"
                 ? "Writing the script."
-                : "Ready when you are.";
+                : "Ready.";
       barEl.style.width = Math.max(0, Math.min(100, job.progress || 0)) + "%";
       percentEl.textContent = Math.max(0, Math.min(100, job.progress || 0)) + "%";
       logEl.textContent = [
@@ -1897,7 +1896,7 @@ function renderHtml() {
         const usage = await response.json();
         budgetEl.textContent = usage.remaining + " / " + usage.limit;
         budgetInlineEl.textContent = usage.remaining + " left";
-        budgetMetaEl.textContent = "Used " + usage.used + " this hour. Resets at " + new Date(usage.resetAt).toLocaleTimeString() + ".";
+      budgetMetaEl.textContent = "Used " + usage.used + " this hour. Resets at " + new Date(usage.resetAt).toLocaleTimeString() + ".";
       } catch (error) {
         budgetEl.textContent = "Unavailable";
         budgetInlineEl.textContent = "Unavailable";

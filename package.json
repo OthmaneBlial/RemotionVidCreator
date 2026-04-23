@@ -1,7 +1,7 @@
 {
-  "name": "remotion-explainer-generator",
+  "name": "remotionvidcreator",
   "version": "1.0.0",
-  "description": "AI video generator for topic-driven social videos with licensed image sourcing",
+  "description": "RemotionVidCreator",
   "type": "module",
   "scripts": {
     "start": "npm run dev",

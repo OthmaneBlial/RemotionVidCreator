@@ -1,6 +1,6 @@
-# Remotion AI Video Generator
+# RemotionVidCreator
 
-Generate engaging explainer videos from any topic using Remotion. The system researches the topic, builds a scene plan, generates a script, and produces a polished vertical video ready for TikTok, Instagram Reels, or YouTube Shorts.
+Generate videos from a topic or brief using Remotion.
 
 The app now uses a Python backend for job orchestration and Unsplash rate tracking, while the browser frontend stays focused on prompting, status, and review.
 
@@ -38,7 +38,7 @@ Renamed:
 
 Recommended application name:
 
-- `Remotion AI Video Generator`
+- `RemotionVidCreator`
 
 Recommended application description:
 
