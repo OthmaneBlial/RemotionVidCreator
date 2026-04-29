@@ -1,5 +1,48 @@
 [
   {
+    "intensity": "balanced",
+    "qualityScore": 78,
+    "updatedAt": 1777448550902,
+    "complexity": "medium",
+    "brief": "",
+    "pacing": "steady",
+    "visualSource": "offline",
+    "message": "Video finished and saved locally.",
+    "platform": "vertical",
+    "motionLevel": "medium",
+    "audioMood": "",
+    "focus": "full",
+    "prompt": "Explain why solar energy is becoming cheaper than coal in plain language.",
+    "audience": "general",
+    "goal": "",
+    "stage": "done",
+    "outputPath": "/home/othmane/Downloads/RemotionVidCreator/output/ai-mode/explain-why-solar-energy-is-becoming-cheaper-than-coal-in-plain--1777448468216.mp4",
+    "id": "d4894a61",
+    "visualDensity": "balanced",
+    "progress": 100,
+    "offlineCategory": "auto",
+    "state": "complete",
+    "seconds": 10,
+    "tone": "informative",
+    "stylePreset": "cinematic",
+    "narrativeTemplate": "problem-solution",
+    "saveOnlineImages": true,
+    "imageCredits": [
+      {
+        "author": "Thomas Richter",
+        "authorUrl": "https://unsplash.com/@thomasrichter?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "renewable-0",
+        "sourceQuery": "Renewable Energy"
+      },
+      {
+        "author": "Andreas Gücklhorn",
+        "authorUrl": "https://unsplash.com/@draufsicht?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "renewable-1",
+        "sourceQuery": "Renewable Energy"
+      }
+    ]
+  },
+  {
     "prompt": "I fixed this bug in 10 seconds… here’s how",
     "updatedAt": 1777445885437,
     "stylePreset": "cinematic",

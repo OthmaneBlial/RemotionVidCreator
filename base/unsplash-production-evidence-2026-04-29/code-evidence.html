@@ -1,0 +1,160 @@
+<!doctype html><html><head><meta charset="utf-8" />
+<style>
+  body { margin: 0; background: #f6f1e8; color: #17211d; font-family: "IBM Plex Sans", "DejaVu Sans", sans-serif; }
+  .page { width: 1500px; padding: 46px; box-sizing: border-box; }
+  h1 { margin: 0 0 10px; font-size: 40px; letter-spacing: -0.03em; }
+  .sub { margin: 0 0 30px; font-size: 20px; color: #6f675d; }
+  .card { background: #fffdf8; border: 1px solid #ded8cc; border-radius: 28px; padding: 26px; margin: 24px 0; box-shadow: 0 18px 40px rgba(42,35,24,.08); }
+  h2 { margin: 0 0 10px; font-size: 24px; }
+  .file { color: #007f72; font-weight: 700; margin-bottom: 14px; }
+  pre { margin: 0; white-space: pre-wrap; background: #121713; color: #f8fff8; padding: 22px; border-radius: 20px; font: 18px/1.5 "JetBrains Mono", "DejaVu Sans Mono", monospace; }
+  .mark { color: #79f2c0; font-weight: 800; }
+</style></head><body><div class="page">
+<h1>Unsplash Attribution Evidence: RemotionVidCreator</h1>
+<p class="sub">These code paths show that photographer names and Unsplash links are rendered with profile URLs containing utm_source=remotion-ai-video-generator&utm_medium=referral.</p>
+<section class="card"><h2>1. API photographer profile links append UTM parameters</h2><div class="file">src/utils/unsplash.ts</div><pre> 260    raw.searchParams.set("crop", "entropy");
+ 261    raw.searchParams.set("q", "80");
+ 262    raw.searchParams.set("fm", "jpg");
+ 263    return raw.toString();
+ 264  }
+ 265  
+ 266  function <span class="mark">buildProfileUrl</span>(url: string): string {
+ 267    const profile = new URL(url);
+ 268    profile.searchParams.set("<span class="mark">utm_source</span>", UNSPLASH_UTM_SOURCE);
+ 269    profile.searchParams.set("<span class="mark">utm_medium</span>", "referral");
+ 270    return profile.toString();
+ 271  }
+ 272  
+ 273  function dedupePhotos(photos: <span class="mark">Unsplash</span>Photo[]): <span class="mark">Unsplash</span>Photo[] {
+ 274    const seen = new Set&lt;string&gt;();
+ 275    const unique: <span class="mark">Unsplash</span>Photo[] = [];
+ 276  
+ 277    for (const photo of photos) {
+ 278      if (seen.has(photo.id)) {
+ 279        continue;
+ 280      }
+ 281      seen.add(photo.id);
+ 282      unique.push(photo);
+ 283    }
+ 284  
+ 285    return unique;
+ 286  }
+ 287  
+ 288  /**
+ 289   * Build a topic-aware set of <span class="mark">Unsplash</span> images for the AI mode renderer.
+ 290   * Search calls are cached locally, and all requests are counted against a strict
+ 291   * 50-request/hour budget.
+ 292   */
+ 293  export async function fetch<span class="mark">Unsplash</span>Images(
+ 294    topic: string,
+ 295    script: ExplainerScript,
+ 296    count = 10,
+ 297    width = 1080,
+ 298    height = 1920
+ 299  ): Promise&lt;<span class="mark">Unsplash</span>Image[]&gt; {
+ 300    const queryVariants = buildQueryVariants(topic, script);
+ 301    const perQueryTarget = Math.max(1, Math.ceil(count / Math.max(1, queryVariants.length)));
+ 302  
+ 303    const collected: <span class="mark">Unsplash</span>Image[] = [];
+ 304    const usedPhotoIds = new Set&lt;string&gt;();
+ 305  
+ 306    for (const query of queryVariants) {
+ 307      if (collected.length &gt;= count) {
+ 308        break;
+ 309      }
+ 310  
+ 311      const photos = dedupePhotos(await searchPhotos(query, perQueryTarget * 2));
+ 312      for (const photo of photos) {
+ 313        if (collected.length &gt;= count) {
+ 314          break;
+ 315        }
+ 316        if (usedPhotoIds.has(photo.id)) {
+ 317          continue;
+ 318        }
+ 319  
+ 320        await trackDownload(photo.links.download_location);
+ 321        usedPhotoIds.add(photo.id);
+ 322  
+ 323        collected.push({
+ 324          src: buildPhotoUrl(photo, width, height),
+ 325          alt: photo.alt_description || photo.description || topic,
+ 326          author: photo.user.name,
+ 327          <span class="mark">authorUrl</span>: <span class="mark">buildProfileUrl</span>(photo.user.links.html),
+ 328          photoId: photo.id,</pre></section><section class="card"><h2>2. Web app attribution renders photographer + Unsplash links</h2><div class="file">bin/ai-mode.ts</div><pre>1970      function renderAttributions(images) {
+1971        if (!attributionEl) return;
+1972        const credits = normalizeCredits(images);
+1973        if (!credits.length) {
+1974          attributionEl.innerHTML = [
+1975            '&lt;div class="credit-row"&gt;',
+1976            '&lt;div&gt;No <span class="mark">Unsplash</span> photos have been selected yet.&lt;/div&gt;',
+1977            '&lt;div class="credit-meta"&gt;Generate a video to show clickable photographer credits here.&lt;/div&gt;',
+1978            '&lt;/div&gt;',
+1979          ].join("");
+1980          return;
+1981        }
+1982  
+1983        attributionEl.innerHTML = credits.slice(0, 8).map((credit) =&gt; {
+1984          const <span class="mark">profileUrl</span> = credit.<span class="mark">authorUrl</span>;
+1985          const homeUrl = build<span class="mark">Unsplash</span>HomeUrl(<span class="mark">profileUrl</span>);
+1986          return [
+1987            '&lt;div class="credit-row"&gt;',
+1988            '&lt;div&gt;<span class="mark">Photo by</span> &lt;a <span class="mark">href</span>="',
+1989            escapeHtml(<span class="mark">profileUrl</span>),
+1990            '" target="_blank" rel="noopener noreferrer"&gt;',
+1991            escapeHtml(credit.author),
+1992            '&lt;/a&gt; on &lt;a <span class="mark">href</span>="',
+1993            escapeHtml(homeUrl),
+1994            '" target="_blank" rel="noopener noreferrer"&gt;<span class="mark">Unsplash</span>&lt;/a&gt;&lt;/div&gt;',
+1995            '&lt;div class="credit-meta"&gt;',
+1996            escapeHtml(<span class="mark">profileUrl</span>),
+1997            credit.sourceQuery ? ' · query: ' + escapeHtml(credit.sourceQuery) : '',
+1998            '&lt;/div&gt;',
+1999            '&lt;/div&gt;',
+2000          ].join("");
+2001        }).join("");
+2002      }</pre></section><section class="card"><h2>3. Rendered video overlay displays photographer + Unsplash profile URL</h2><div class="file">src/components/ImageSlideshow.tsx</div><pre>  35  const <span class="mark">Unsplash</span>Attribution = ({
+  36    author,
+  37    <span class="mark">authorUrl</span>,
+  38  }: {
+  39    author?: string;
+  40    <span class="mark">authorUrl</span>?: string;
+  41  }) =&gt; {
+  42    if (!author) {
+  43      return null;
+  44    }
+  45  
+  46    return (
+  47      &lt;div
+  48        style={{
+  49          position: "absolute",
+  50          left: 28,
+  51          bottom: 28,
+  52          zIndex: 5,
+  53          maxWidth: "78%",
+  54          padding: "12px 16px",
+  55          borderRadius: 18,
+  56          background: "rgba(0,0,0,0.68)",
+  57          border: "1px solid rgba(255,255,255,0.18)",
+  58          color: "rgba(255,255,255,0.95)",
+  59          fontFamily: "Inter, sans-serif",
+  60          fontSize: 18,
+  61          lineHeight: 1.35,
+  62          backdropFilter: "blur(12px)",
+  63          boxShadow: "0 12px 34px rgba(0,0,0,0.35)",
+  64        }}
+  65      &gt;
+  66        &lt;span style={{ fontWeight: 700 }}&gt;<span class="mark">Photo by</span> {author} on <span class="mark">Unsplash</span>&lt;/span&gt;
+  67        {<span class="mark">authorUrl</span> ? (
+  68          &lt;span
+  69            style={{
+  70              color: "rgba(255,255,255,0.78)",
+  71              display: "block",
+  72              marginTop: 4,
+  73              fontSize: 13,
+  74              lineHeight: 1.35,
+  75              wordBreak: "break-all",
+  76            }}
+  77          &gt;
+  78            <span class="mark">Unsplash</span> profile: {<span class="mark">authorUrl</span>}
+  79          &lt;/span&gt;
+  80        ) : null}</pre></section></div></body></html>
