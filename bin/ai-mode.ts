@@ -557,27 +557,6 @@ function renderHtml() {
       font-size: 12px;
       line-height: 1.5;
     }
-    .starter-prompts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .starter-prompt {
-      border: 1px solid rgba(141, 220, 255, 0.16);
-      border-radius: 999px;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text);
-      font-size: 12px;
-      cursor: pointer;
-      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
-    }
-    .starter-prompt:hover {
-      transform: translateY(-1px);
-      border-color: rgba(141, 220, 255, 0.5);
-      background: rgba(141, 220, 255, 0.08);
-    }
     .card {
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
@@ -1356,10 +1335,6 @@ function renderHtml() {
     .credit-meta {
       color: var(--muted);
     }
-    .starter-prompts {
-      gap: 10px;
-    }
-    .starter-prompt,
     .chip,
     .timeline-btn {
       background: #ffffff;
@@ -1367,7 +1342,6 @@ function renderHtml() {
       border-color: rgba(23, 33, 29, 0.12);
       box-shadow: 0 8px 18px rgba(79, 64, 40, 0.04);
     }
-    .starter-prompt:hover,
     .chip:hover,
     .timeline-btn:hover {
       background: #f1f8f5;
@@ -1610,21 +1584,11 @@ function renderHtml() {
                 <strong>Brief</strong>
                 <span>One idea in, one video out</span>
               </div>
-              <p>Keep it short. Add detail only when you need it.</p>
-            </div>
-            <div class="starter-prompts" aria-label="Starter suggestions">
-              <button class="starter-prompt" type="button" data-suggestion="Why solar energy is becoming cheaper than coal">Solar</button>
-              <button class="starter-prompt" type="button" data-suggestion="Explain how AI agents can save a small team hours every week">Teams</button>
-              <button class="starter-prompt" type="button" data-suggestion="Show why creator-led brands are growing faster than ads">Creators</button>
-              <button class="starter-prompt" type="button" data-suggestion="Explain the future of electric cars in plain language">EVs</button>
             </div>
           </div>
 
+          <input id="goal" type="hidden" value="" />
           <div class="field-grid four">
-            <div class="field">
-              <label for="goal">Goal</label>
-              <input id="goal" type="text" placeholder="Educate, persuade, compare, inspire" />
-            </div>
             <div class="field">
               <label for="pacing">Pacing</label>
               <select id="pacing">
@@ -1881,7 +1845,7 @@ function renderHtml() {
   <script>
     const DEFAULTS = {
       prompt: "Explain why solar energy is becoming cheaper than coal in plain language.",
-      goal: "Educate viewers clearly",
+      goal: "",
       pacing: "steady",
       brief: "",
       seconds: "10",
@@ -1939,7 +1903,6 @@ function renderHtml() {
     const attributionEl = document.getElementById("attributionPane");
     const presetChips = document.getElementById("presetChips");
     const presetGuideEl = document.getElementById("presetGuide");
-    const starterPrompts = document.querySelector(".starter-prompts");
     const resetButton = document.getElementById("reset");
     let pollTimer = null;
     let activeJobId = null;
@@ -2253,6 +2216,7 @@ function renderHtml() {
         const source = button.getAttribute("data-source");
         button.classList.toggle("active", source === visualSourceEl.value);
       });
+      offlineCategoryEl.disabled = visualSourceEl.value === "online";
     }
 
     function renderPresetGuide() {
@@ -2664,16 +2628,6 @@ function renderHtml() {
       stylePresetEl.value = preset;
       syncPresetChips();
       target.blur();
-    });
-
-    starterPrompts?.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const suggestion = target.getAttribute("data-suggestion");
-      if (!suggestion) return;
-      promptEl.value = suggestion;
-      promptEl.focus();
-      promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
     stylePresetEl.addEventListener("change", syncPresetChips);
