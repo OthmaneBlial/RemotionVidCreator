@@ -6,7 +6,7 @@ import {
   Img,
   staticFile,
 } from "remotion";
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 
 export interface SlideImage {
   src: string;
@@ -24,6 +24,56 @@ interface ImageSlideshowProps {
   overlayOpacity?: number;
   blurEdges?: boolean;
 }
+
+const UnsplashAttribution = ({
+  author,
+  authorUrl,
+}: {
+  author?: string;
+  authorUrl?: string;
+}) => {
+  if (!author) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 28,
+        bottom: 28,
+        zIndex: 5,
+        maxWidth: "78%",
+        padding: "12px 16px",
+        borderRadius: 18,
+        background: "rgba(0,0,0,0.68)",
+        border: "1px solid rgba(255,255,255,0.18)",
+        color: "rgba(255,255,255,0.95)",
+        fontFamily: "Inter, sans-serif",
+        fontSize: 18,
+        lineHeight: 1.35,
+        backdropFilter: "blur(12px)",
+        boxShadow: "0 12px 34px rgba(0,0,0,0.35)",
+      }}
+    >
+      <span style={{ fontWeight: 700 }}>Photo by {author} on Unsplash</span>
+      {authorUrl ? (
+        <span
+          style={{
+            color: "rgba(255,255,255,0.78)",
+            display: "block",
+            marginTop: 4,
+            fontSize: 13,
+            lineHeight: 1.35,
+            wordBreak: "break-all",
+          }}
+        >
+          Unsplash profile: {authorUrl}
+        </span>
+      ) : null}
+    </div>
+  );
+};
 
 export const ImageSlideshow = ({
   images,
@@ -162,33 +212,7 @@ export const ImageSlideshow = ({
         </AbsoluteFill>
       )}
 
-      {currentImage.author ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 28,
-            bottom: 28,
-            zIndex: 5,
-            maxWidth: "70%",
-            padding: "10px 14px",
-            borderRadius: 999,
-            background: "rgba(0,0,0,0.55)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.92)",
-            fontFamily: "Inter, sans-serif",
-            fontSize: 12,
-            lineHeight: 1.4,
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          <span>Photo by {currentImage.author} on Unsplash</span>
-          {currentImage.authorUrl ? (
-            <span style={{ color: "rgba(255,255,255,0.7)", display: "block", marginTop: 2 }}>
-              {currentImage.authorUrl}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
+      <UnsplashAttribution author={currentImage.author} authorUrl={currentImage.authorUrl} />
     </AbsoluteFill>
   );
 };
@@ -260,33 +284,7 @@ export const KenBurnsImage = ({
         }}
       />
 
-      {author ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 28,
-            bottom: 28,
-            zIndex: 5,
-            maxWidth: "70%",
-            padding: "10px 14px",
-            borderRadius: 999,
-            background: "rgba(0,0,0,0.55)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.92)",
-            fontFamily: "Inter, sans-serif",
-            fontSize: 12,
-            lineHeight: 1.4,
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          <span>Photo by {author} on Unsplash</span>
-          {authorUrl ? (
-            <span style={{ color: "rgba(255,255,255,0.7)", display: "block", marginTop: 2 }}>
-              {authorUrl}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
+      <UnsplashAttribution author={author} authorUrl={authorUrl} />
 
       {/* Vignette */}
       <AbsoluteFill>

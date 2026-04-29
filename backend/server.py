@@ -85,7 +85,20 @@ def compact_history_entry(entry: dict):
     "error",
     "updatedAt",
   }
-  return {key: entry.get(key) for key in keep_keys if key in entry}
+  compact = {key: entry.get(key) for key in keep_keys if key in entry}
+  images = entry.get("images")
+  if isinstance(images, list):
+    compact["imageCredits"] = [
+      {
+        "author": image.get("author"),
+        "authorUrl": image.get("authorUrl"),
+        "photoId": image.get("photoId"),
+        "sourceQuery": image.get("sourceQuery"),
+      }
+      for image in images
+      if isinstance(image, dict) and image.get("author") and image.get("authorUrl")
+    ]
+  return compact
 
 
 def get_unsplash_usage():

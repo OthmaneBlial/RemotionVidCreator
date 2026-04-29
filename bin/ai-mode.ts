@@ -636,6 +636,48 @@ function renderHtml() {
     .field-grid.four {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+    .advanced-panel,
+    .diagnostics-panel {
+      margin-top: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+    .advanced-panel summary,
+    .diagnostics-panel summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 16px 18px;
+      color: var(--muted-strong);
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+    .advanced-panel summary::-webkit-details-marker,
+    .diagnostics-panel summary::-webkit-details-marker {
+      display: none;
+    }
+    .advanced-panel summary::after,
+    .diagnostics-panel summary::after {
+      content: "+";
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.06);
+      color: var(--accent);
+    }
+    .advanced-panel[open] summary::after,
+    .diagnostics-panel[open] summary::after {
+      content: "-";
+    }
+    .advanced-fields {
+      padding: 0 18px 18px;
+    }
     .brief {
       min-height: 92px;
       resize: vertical;
@@ -865,6 +907,35 @@ function renderHtml() {
       border: 1px solid rgba(255,255,255,0.08);
       font-size: 11px;
       color: var(--muted-strong);
+    }
+    .attribution-card {
+      display: grid;
+      gap: 12px;
+    }
+    .attribution-list {
+      display: grid;
+      gap: 10px;
+    }
+    .credit-row {
+      display: grid;
+      gap: 6px;
+      padding: 13px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .credit-row a {
+      color: #d4f7ff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      word-break: break-word;
+    }
+    .credit-meta {
+      color: var(--muted);
+      font-size: 11px;
+      word-break: break-word;
     }
     .panel + .panel {
       margin-top: 0;
@@ -1097,6 +1168,368 @@ function renderHtml() {
         font-size: clamp(34px, 12vw, 54px);
       }
     }
+
+    /* Light redesign override: calm SaaS workspace with no horizontal overflow. */
+    :root {
+      color-scheme: light;
+      --bg: #f8f3ea;
+      --panel: #fffdf8;
+      --panel-strong: #ffffff;
+      --panel-soft: #f2eee6;
+      --line: #ded6c9;
+      --line-strong: #c9bead;
+      --text: #17211d;
+      --muted: #756f67;
+      --muted-strong: #4d554f;
+      --accent: #087f72;
+      --accent-2: #f29b50;
+      --accent-3: #69b99d;
+      --danger: #c2414b;
+      --shadow: 0 26px 70px rgba(79, 64, 40, 0.12);
+      --shadow-soft: 0 14px 34px rgba(79, 64, 40, 0.08);
+    }
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: var(--bg);
+    }
+    body {
+      font-family: Manrope, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 12%, rgba(8, 127, 114, 0.14), transparent 28%),
+        radial-gradient(circle at 92% 8%, rgba(242, 155, 80, 0.18), transparent 24%),
+        linear-gradient(135deg, #fbf8f1 0%, #f5efe4 52%, #eff5ef 100%);
+    }
+    body::before {
+      opacity: 0.08;
+      mix-blend-mode: multiply;
+    }
+    body::after {
+      background: radial-gradient(circle, rgba(8, 127, 114, 0.12), transparent 70%);
+    }
+    .shell {
+      width: min(1180px, 100%);
+      padding: 22px clamp(16px, 4vw, 34px) 48px;
+    }
+    .topbar {
+      top: 12px;
+      margin-bottom: 34px;
+      background: rgba(255, 253, 248, 0.86);
+      border: 1px solid rgba(50, 43, 34, 0.1);
+      box-shadow: 0 18px 40px rgba(66, 53, 36, 0.08);
+    }
+    .brand-mark {
+      background: #17211d;
+      color: #fff8ec;
+      box-shadow: none;
+    }
+    .brand-copy strong,
+    .section-title strong,
+    .panel-title,
+    .timeline-title,
+    .status-banner .value,
+    .metric .value {
+      color: var(--text);
+    }
+    .pill {
+      background: #ffffff;
+      border-color: rgba(23, 33, 29, 0.1);
+      color: var(--muted-strong);
+    }
+    .pill-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(8, 127, 114, 0.1);
+    }
+    .hero {
+      text-align: left;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      column-gap: 28px;
+      padding: 10px 2px 30px;
+    }
+    .eyebrow,
+    .lede,
+    .hero-actions {
+      grid-column: 1;
+    }
+    h1 {
+      grid-column: 1;
+      margin-inline: 0;
+      max-width: 12ch;
+      color: var(--text);
+      font-size: clamp(42px, 7vw, 86px);
+      letter-spacing: -0.06em;
+    }
+    .lede {
+      margin: 0;
+      max-width: 54ch;
+      color: var(--muted-strong);
+    }
+    .hero-actions {
+      justify-content: flex-start;
+    }
+    .hero-note {
+      color: var(--muted);
+    }
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+      gap: 18px;
+      width: 100%;
+    }
+    .card,
+    .panel,
+    .panel-stack {
+      background: rgba(255, 253, 248, 0.92);
+      border: 1px solid rgba(23, 33, 29, 0.1);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+    }
+    .card {
+      border-radius: 30px;
+      overflow: hidden;
+    }
+    #creation-brief {
+      display: grid;
+      gap: 18px;
+      padding: clamp(18px, 3vw, 28px);
+    }
+    #creation-brief > .composer,
+    #creation-brief > .field-grid,
+    #creation-brief > .field,
+    #creation-brief > .advanced-panel,
+    #creation-brief > .composer-actions,
+    #creation-brief > .foot {
+      min-width: 0;
+    }
+    .composer {
+      padding: 0;
+      gap: 16px;
+    }
+    .composer-head p,
+    .panel-copy,
+    .stage-copy,
+    .section-title span,
+    .metric .subvalue,
+    .status-banner .subvalue,
+    .brand-copy span,
+    .timeline-top,
+    .timeline-meta,
+    .credit-meta {
+      color: var(--muted);
+    }
+    .starter-prompts {
+      gap: 10px;
+    }
+    .starter-prompt,
+    .chip,
+    .timeline-btn {
+      background: #ffffff;
+      color: var(--text);
+      border-color: rgba(23, 33, 29, 0.12);
+      box-shadow: 0 8px 18px rgba(79, 64, 40, 0.04);
+    }
+    .starter-prompt:hover,
+    .chip:hover,
+    .timeline-btn:hover {
+      background: #f1f8f5;
+      border-color: rgba(8, 127, 114, 0.35);
+    }
+    .field label,
+    .metric .label,
+    .status-banner .label {
+      color: #7f7669;
+      letter-spacing: 0.16em;
+    }
+    textarea,
+    input,
+    select {
+      background: #ffffff;
+      color: var(--text);
+      border-color: rgba(23, 33, 29, 0.13);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    textarea::placeholder,
+    input::placeholder {
+      color: #9d968c;
+    }
+    textarea {
+      min-height: 210px;
+      font-size: 18px;
+    }
+    .brief {
+      min-height: 72px;
+      font-size: 14px;
+    }
+    textarea:focus,
+    input:focus,
+    select:focus {
+      border-color: rgba(8, 127, 114, 0.7);
+      box-shadow: 0 0 0 4px rgba(8, 127, 114, 0.12);
+      transform: none;
+    }
+    .field-grid,
+    .field-grid.four {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .advanced-panel,
+    .diagnostics-panel {
+      background: #fffaf0;
+      border-color: rgba(23, 33, 29, 0.1);
+      border-radius: 22px;
+    }
+    .advanced-panel summary,
+    .diagnostics-panel summary {
+      color: var(--text);
+    }
+    .advanced-panel summary::after,
+    .diagnostics-panel summary::after {
+      background: #ecf7f3;
+      color: var(--accent);
+    }
+    .tone-hint,
+    .field-hint,
+    .preset-guide,
+    .metric,
+    .status-banner,
+    .timeline-item,
+    .credit-row {
+      background: #ffffff;
+      border-color: rgba(23, 33, 29, 0.1);
+      color: var(--muted-strong);
+    }
+    .composer-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+    .composer-actions .button,
+    .composer-actions .button.secondary {
+      min-width: 0;
+      flex: none;
+    }
+    .button {
+      background: linear-gradient(135deg, #0c8b7d 0%, #36b396 55%, #f4b56d 125%);
+      color: #ffffff;
+      box-shadow: 0 18px 36px rgba(8, 127, 114, 0.18);
+    }
+    .button.secondary {
+      background: #ffffff;
+      color: var(--text);
+      border-color: rgba(23, 33, 29, 0.12);
+      box-shadow: none;
+    }
+    .foot {
+      color: var(--muted);
+      padding-top: 0;
+    }
+    code {
+      color: #324039;
+    }
+    .right-rail {
+      top: 88px;
+      min-width: 0;
+    }
+    .preview-frame {
+      min-height: 230px;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(8, 127, 114, 0.18), transparent 28%),
+        radial-gradient(circle at 82% 24%, rgba(242, 155, 80, 0.22), transparent 24%),
+        linear-gradient(155deg, #fcfbf7, #eaf4ef);
+      border-color: rgba(23, 33, 29, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8);
+    }
+    .preview-kicker,
+    .preview-chip {
+      background: rgba(255, 255, 255, 0.76);
+      border-color: rgba(23, 33, 29, 0.1);
+      color: var(--muted-strong);
+    }
+    .preview-title,
+    .preview-copy {
+      color: var(--text);
+    }
+    .preview-copy {
+      color: var(--muted-strong);
+    }
+    .panel-stack {
+      border-radius: 30px;
+      overflow: hidden;
+    }
+    .metrics {
+      grid-template-columns: 1fr 1fr;
+    }
+    .progress {
+      background: #ede6da;
+      border-color: rgba(23, 33, 29, 0.08);
+    }
+    .bar {
+      background: linear-gradient(90deg, var(--accent), #63c2a9, var(--accent-2));
+      box-shadow: none;
+    }
+    .log {
+      background: #17211d;
+      color: #eff8f3;
+      border-color: rgba(23, 33, 29, 0.12);
+    }
+    .credit-row a {
+      color: #076d63;
+    }
+    @media (max-width: 980px) {
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .workspace,
+      .field-grid,
+      .field-grid.four,
+      .metrics,
+      .composer-actions {
+        grid-template-columns: 1fr;
+      }
+      .right-rail {
+        position: static;
+      }
+      .topbar {
+        border-radius: 24px;
+      }
+      h1 {
+        font-size: clamp(38px, 13vw, 62px);
+      }
+    }
+    @media (max-width: 520px) {
+      .shell {
+        padding-inline: 12px;
+      }
+      .topbar {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .brand {
+        width: 100%;
+      }
+      .brand-copy strong,
+      .brand-copy span {
+        white-space: normal;
+      }
+      #creation-brief {
+        padding: 16px;
+        border-radius: 24px;
+      }
+      textarea {
+        min-height: 180px;
+      }
+      .topbar-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+      .pill {
+        flex: 1;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1169,125 +1602,130 @@ function renderHtml() {
             <label for="brief">Notes</label>
             <textarea id="brief" class="brief" placeholder="Optional details."></textarea>
           </div>
-          <div class="field-grid four">
-            <div class="field">
-              <label for="seconds">Duration</label>
-              <input id="seconds" type="number" min="5" max="300" step="5" value="45" />
+          <details class="advanced-panel">
+            <summary>Advanced settings <span>Optional</span></summary>
+            <div class="advanced-fields">
+              <div class="field-grid four">
+                <div class="field">
+                  <label for="seconds">Duration</label>
+                  <input id="seconds" type="number" min="5" max="300" step="5" value="10" />
+                </div>
+                <div class="field">
+                  <label for="tone">Tone</label>
+                  <select id="tone">
+                    <option value="informative" selected>Informative</option>
+                    <option value="casual">Casual</option>
+                    <option value="professional">Professional</option>
+                    <option value="dramatic">Dramatic</option>
+                    <option value="humorous">Humorous</option>
+                    <option value="storytelling">Storytelling</option>
+                    <option value="calm">Calm</option>
+                    <option value="energetic">Energetic</option>
+                    <option value="subtle">Subtle</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                  <div class="tone-hint" id="toneHint"></div>
+                </div>
+                <div class="field">
+                  <label for="complexity">Complexity</label>
+                  <select id="complexity">
+                    <option value="simple">Simple</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="detailed">Detailed</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="stylePreset">Style preset</label>
+                  <select id="stylePreset">
+                    <option value="cinematic" selected>Cinematic</option>
+                    <option value="educational">Educational</option>
+                    <option value="bold">Bold</option>
+                    <option value="playful">Playful</option>
+                    <option value="premium">Premium</option>
+                    <option value="documentary">Documentary</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="audience">Audience</label>
+                  <select id="audience">
+                    <option value="general" selected>General</option>
+                    <option value="beginners">Beginners</option>
+                    <option value="students">Students</option>
+                    <option value="creators">Creators</option>
+                    <option value="founders">Founders</option>
+                    <option value="executives">Executives</option>
+                    <option value="professionals">Professionals</option>
+                  </select>
+                  <div class="field-hint" id="audienceHint"></div>
+                </div>
+                <div class="field">
+                  <label for="platform">Platform</label>
+                  <select id="platform">
+                    <option value="vertical" selected>Vertical</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="reels">Reels</option>
+                    <option value="shorts">Shorts</option>
+                  </select>
+                  <div class="field-hint" id="platformHint"></div>
+                </div>
+                <div class="field">
+                  <label for="intensity">Intensity</label>
+                  <select id="intensity">
+                    <option value="safe">Safe</option>
+                    <option value="balanced" selected>Balanced</option>
+                    <option value="wild">Wild</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="motionLevel">Motion</label>
+                  <select id="motionLevel">
+                    <option value="minimal">Minimal</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="visualDensity">Visual density</label>
+                  <select id="visualDensity">
+                    <option value="minimal">Minimal</option>
+                    <option value="balanced" selected>Balanced</option>
+                    <option value="rich">Rich</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="narrativeTemplate">Narrative</label>
+                  <select id="narrativeTemplate">
+                    <option value="problem-solution" selected>Problem / solution</option>
+                    <option value="myth-busting">Myth busting</option>
+                    <option value="timeline">Timeline</option>
+                    <option value="comparison">Comparison</option>
+                    <option value="transformation">Transformation</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="audioMood">Audio mood</label>
+                  <select id="audioMood">
+                    <option value="">Auto</option>
+                    <option value="Cinematic pulse">Cinematic</option>
+                    <option value="Clean bed">Clean</option>
+                    <option value="Percussive pulse">Percussive</option>
+                    <option value="Bright rhythm">Bright</option>
+                    <option value="Polished bed">Premium</option>
+                    <option value="Textured score">Textured</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="focus">Focus</label>
+                  <select id="focus">
+                    <option value="full" selected>Full video</option>
+                    <option value="hook">Hook</option>
+                    <option value="middle">Middle</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="field">
-              <label for="tone">Tone</label>
-              <select id="tone">
-                <option value="informative" selected>Informative</option>
-                <option value="casual">Casual</option>
-                <option value="professional">Professional</option>
-                <option value="dramatic">Dramatic</option>
-                <option value="humorous">Humorous</option>
-                <option value="storytelling">Storytelling</option>
-                <option value="calm">Calm</option>
-                <option value="energetic">Energetic</option>
-                <option value="subtle">Subtle</option>
-                <option value="urgent">Urgent</option>
-              </select>
-              <div class="tone-hint" id="toneHint"></div>
-            </div>
-            <div class="field">
-              <label for="complexity">Complexity</label>
-              <select id="complexity">
-                <option value="simple">Simple</option>
-                <option value="medium" selected>Medium</option>
-                <option value="detailed">Detailed</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="stylePreset">Style preset</label>
-              <select id="stylePreset">
-                <option value="cinematic" selected>Cinematic</option>
-                <option value="educational">Educational</option>
-                <option value="bold">Bold</option>
-                <option value="playful">Playful</option>
-                <option value="premium">Premium</option>
-                <option value="documentary">Documentary</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="audience">Audience</label>
-              <select id="audience">
-                <option value="general" selected>General</option>
-                <option value="beginners">Beginners</option>
-                <option value="students">Students</option>
-                <option value="creators">Creators</option>
-                <option value="founders">Founders</option>
-                <option value="executives">Executives</option>
-                <option value="professionals">Professionals</option>
-              </select>
-              <div class="field-hint" id="audienceHint"></div>
-            </div>
-            <div class="field">
-              <label for="platform">Platform</label>
-              <select id="platform">
-                <option value="vertical" selected>Vertical</option>
-                <option value="tiktok">TikTok</option>
-                <option value="reels">Reels</option>
-                <option value="shorts">Shorts</option>
-              </select>
-              <div class="field-hint" id="platformHint"></div>
-            </div>
-            <div class="field">
-              <label for="intensity">Intensity</label>
-              <select id="intensity">
-                <option value="safe">Safe</option>
-                <option value="balanced" selected>Balanced</option>
-                <option value="wild">Wild</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="motionLevel">Motion</label>
-              <select id="motionLevel">
-                <option value="minimal">Minimal</option>
-                <option value="medium" selected>Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="visualDensity">Visual density</label>
-              <select id="visualDensity">
-                <option value="minimal">Minimal</option>
-                <option value="balanced" selected>Balanced</option>
-                <option value="rich">Rich</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="narrativeTemplate">Narrative</label>
-              <select id="narrativeTemplate">
-                <option value="problem-solution" selected>Problem / solution</option>
-                <option value="myth-busting">Myth busting</option>
-                <option value="timeline">Timeline</option>
-                <option value="comparison">Comparison</option>
-                <option value="transformation">Transformation</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="audioMood">Audio mood</label>
-              <select id="audioMood">
-                <option value="">Auto</option>
-              <option value="Cinematic pulse">Cinematic</option>
-              <option value="Clean bed">Clean</option>
-              <option value="Percussive pulse">Percussive</option>
-              <option value="Bright rhythm">Bright</option>
-              <option value="Polished bed">Premium</option>
-              <option value="Textured score">Textured</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="focus">Focus</label>
-              <select id="focus">
-                <option value="full" selected>Full video</option>
-                <option value="hook">Hook</option>
-                <option value="middle">Middle</option>
-                <option value="outro">Outro</option>
-              </select>
-            </div>
-          </div>
+          </details>
           <div class="composer-actions">
             <button id="generate" class="button">Generate</button>
             <button id="reset" class="button secondary" type="button">Reset</button>
@@ -1296,7 +1734,6 @@ function renderHtml() {
             <div>Uses <code>.env</code>.</div>
             <div>Saves to <code>output/ai-mode</code>.</div>
           </div>
-        </div>
         </div>
       </div>
 
@@ -1309,46 +1746,12 @@ function renderHtml() {
           <div id="previewPane" class="preview-pane" aria-live="polite"></div>
         </section>
 
-        <section class="card panel">
+        <section class="card panel attribution-card">
           <div class="section-title">
-            <strong>Styles</strong>
-            <span>Tap one</span>
+            <strong>Unsplash attribution</strong>
+            <span>Required</span>
           </div>
-          <div class="chips" id="presetChips">
-            <button class="chip" data-preset="cinematic">Cinematic</button>
-            <button class="chip" data-preset="educational">Educational</button>
-            <button class="chip" data-preset="bold">Bold</button>
-            <button class="chip" data-preset="playful">Playful</button>
-            <button class="chip" data-preset="premium">Premium</button>
-            <button class="chip" data-preset="documentary">Documentary</button>
-          </div>
-          <div class="preset-guide" id="presetGuide"></div>
-        </section>
-
-        <section class="card panel stage-card">
-          <div class="stage-header">
-            <div class="panel-title">Flow</div>
-            <span class="pill">Live</span>
-          </div>
-          <p class="stage-copy">Brief, status, next step.</p>
-          <div class="preset-grid">
-            <div class="preset-card">
-              <div class="preset-name">Hook</div>
-              <div class="preset-copy">Stronger first line.</div>
-            </div>
-            <div class="preset-card">
-              <div class="preset-name">Scenes</div>
-              <div class="preset-copy">Clear sections.</div>
-            </div>
-            <div class="preset-card">
-              <div class="preset-name">Fallback</div>
-              <div class="preset-copy">Missing visuals still look good.</div>
-            </div>
-            <div class="preset-card">
-              <div class="preset-name">Audio</div>
-              <div class="preset-copy">Audio matches the tone.</div>
-            </div>
-          </div>
+          <div id="attributionPane" class="attribution-list" aria-live="polite"></div>
         </section>
 
         <section class="card panel-stack">
@@ -1396,7 +1799,12 @@ function renderHtml() {
               <strong>Log</strong>
               <span>Trace</span>
             </div>
-            <div class="log" id="log">Waiting.</div>
+            <details class="diagnostics-panel">
+              <summary>Show diagnostics <span>Technical</span></summary>
+              <div class="advanced-fields">
+                <div class="log" id="log">Waiting.</div>
+              </div>
+            </details>
           </div>
         </section>
       </aside>
@@ -1408,7 +1816,7 @@ function renderHtml() {
       goal: "Educate viewers clearly",
       pacing: "steady",
       brief: "",
-      seconds: "45",
+      seconds: "10",
       tone: "informative",
       complexity: "medium",
       stylePreset: "cinematic",
@@ -1453,6 +1861,7 @@ function renderHtml() {
     const logEl = document.getElementById("log");
     const historyEl = document.getElementById("history");
     const previewEl = document.getElementById("previewPane");
+    const attributionEl = document.getElementById("attributionPane");
     const presetChips = document.getElementById("presetChips");
     const presetGuideEl = document.getElementById("presetGuide");
     const starterPrompts = document.querySelector(".starter-prompts");
@@ -1461,6 +1870,98 @@ function renderHtml() {
     let activeJobId = null;
     let usageTimer = null;
     let historyTimer = null;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function safeUnsplashUrl(value) {
+      try {
+        const url = new URL(String(value));
+        if (url.hostname !== "unsplash.com" && !url.hostname.endsWith(".unsplash.com")) {
+          return "";
+        }
+        url.searchParams.set("utm_medium", "referral");
+        if (!url.searchParams.get("utm_source")) {
+          url.searchParams.set("utm_source", "remotion-ai-video-generator");
+        }
+        return url.toString();
+      } catch {
+        return "";
+      }
+    }
+
+    function buildUnsplashHomeUrl(profileUrl) {
+      const home = new URL("https://unsplash.com/");
+      try {
+        const profile = new URL(String(profileUrl));
+        home.searchParams.set(
+          "utm_source",
+          profile.searchParams.get("utm_source") || "remotion-ai-video-generator"
+        );
+      } catch {
+        home.searchParams.set("utm_source", "remotion-ai-video-generator");
+      }
+      home.searchParams.set("utm_medium", "referral");
+      return home.toString();
+    }
+
+    function normalizeCredits(images) {
+      const seen = new Set();
+      return (Array.isArray(images) ? images : [])
+        .map((image) => ({
+          author: image?.author,
+          authorUrl: safeUnsplashUrl(image?.authorUrl),
+          photoId: image?.photoId,
+          sourceQuery: image?.sourceQuery,
+        }))
+        .filter((credit) => credit.author && credit.authorUrl)
+        .filter((credit) => {
+          const key = credit.photoId || credit.authorUrl;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    }
+
+    function renderAttributions(images) {
+      if (!attributionEl) return;
+      const credits = normalizeCredits(images);
+      if (!credits.length) {
+        attributionEl.innerHTML = [
+          '<div class="credit-row">',
+          '<div>No Unsplash photos have been selected yet.</div>',
+          '<div class="credit-meta">Generate a video to show clickable photographer credits here.</div>',
+          '</div>',
+        ].join("");
+        return;
+      }
+
+      attributionEl.innerHTML = credits.slice(0, 8).map((credit) => {
+        const profileUrl = credit.authorUrl;
+        const homeUrl = buildUnsplashHomeUrl(profileUrl);
+        return [
+          '<div class="credit-row">',
+          '<div>Photo by <a href="',
+          escapeHtml(profileUrl),
+          '" target="_blank" rel="noopener noreferrer">',
+          escapeHtml(credit.author),
+          '</a> on <a href="',
+          escapeHtml(homeUrl),
+          '" target="_blank" rel="noopener noreferrer">Unsplash</a></div>',
+          '<div class="credit-meta">',
+          escapeHtml(profileUrl),
+          credit.sourceQuery ? ' · query: ' + escapeHtml(credit.sourceQuery) : '',
+          '</div>',
+          '</div>',
+        ].join("");
+      }).join("");
+    }
 
     const TONE_GUIDES = {
       informative: {
@@ -1884,6 +2385,7 @@ function renderHtml() {
         job.outputPath ? "Output: " + job.outputPath : null,
         job.error ? "Error: " + job.error : null,
       ].filter(Boolean).join("\\n");
+      renderAttributions(job.images || job.imageCredits || []);
       button.disabled = job.state !== "complete" && job.state !== "error" && job.state !== "idle";
     }
 
@@ -1896,11 +2398,11 @@ function renderHtml() {
         const usage = await response.json();
         budgetEl.textContent = usage.remaining + " / " + usage.limit;
         budgetInlineEl.textContent = usage.remaining + " left";
-      budgetMetaEl.textContent = "Used " + usage.used + " this hour. Resets at " + new Date(usage.resetAt).toLocaleTimeString() + ".";
+        budgetMetaEl.textContent = "Used " + usage.used + " this hour. Resets at " + new Date(usage.resetAt).toLocaleTimeString() + ".";
       } catch (error) {
-        budgetEl.textContent = "Unavailable";
-        budgetInlineEl.textContent = "Unavailable";
-        budgetMetaEl.textContent = String(error);
+        budgetEl.textContent = "Starting";
+        budgetInlineEl.textContent = "Checking";
+        budgetMetaEl.textContent = "Backend is starting. Usage will refresh automatically.";
       }
     }
 
@@ -1964,11 +2466,17 @@ function renderHtml() {
         const items = await response.json();
         renderHistory(items);
         renderPreview(items[0] || null);
+        if (!activeJobId) {
+          renderAttributions(items[0]?.imageCredits || items[0]?.images || []);
+        }
       } catch (error) {
         if (historyEl) {
-          historyEl.innerHTML = "<div class='subvalue'>" + String(error) + "</div>";
+          historyEl.innerHTML = "<div class='panel-copy'>History will appear after the backend is ready.</div>";
         }
         renderPreview(null);
+        if (!activeJobId) {
+          renderAttributions([]);
+        }
       }
     }
 
@@ -2017,6 +2525,7 @@ function renderHtml() {
       statusEl.textContent = "Starting...";
       barEl.style.width = "2%";
       logEl.textContent = "Creating the job...";
+      renderAttributions([]);
 
       const response = await fetch("/generate", {
         method: "POST",
@@ -2119,6 +2628,7 @@ function renderHtml() {
 
     applyDefaults();
     renderPreview(null);
+    renderAttributions([]);
     refreshBudget();
     refreshHistory();
     usageTimer = setInterval(refreshBudget, 60000);
