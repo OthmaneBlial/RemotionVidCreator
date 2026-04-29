@@ -1,5 +1,66 @@
 [
   {
+    "prompt": "I fixed this bug in 10 seconds… here’s how",
+    "updatedAt": 1777445885437,
+    "stylePreset": "cinematic",
+    "visualDensity": "balanced",
+    "platform": "vertical",
+    "pacing": "steady",
+    "id": "62fb8399",
+    "stage": "done",
+    "complexity": "medium",
+    "seconds": 10,
+    "brief": "",
+    "narrativeTemplate": "problem-solution",
+    "motionLevel": "medium",
+    "progress": 100,
+    "tone": "informative",
+    "goal": "Educate viewers clearly",
+    "audience": "general",
+    "focus": "full",
+    "outputPath": "/home/othmane/Downloads/RemotionVidCreator/output/ai-mode/i-fixed-this-bug-in-10-seconds…-here’s-how-1777445790099.mp4",
+    "qualityScore": 90,
+    "audioMood": "",
+    "visualSource": "offline",
+    "intensity": "balanced",
+    "message": "Video finished and saved locally.",
+    "state": "complete",
+    "saveOnlineImages": true,
+    "offlineCategory": "auto",
+    "imageCredits": [
+      {
+        "author": "Zhou (Link) Fang",
+        "authorUrl": "https://unsplash.com/@linkfang?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "technology-0",
+        "sourceQuery": "Technology"
+      },
+      {
+        "author": "Harrison Broadbent",
+        "authorUrl": "https://unsplash.com/@harrisonbroadbent?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "technology-1",
+        "sourceQuery": "Technology"
+      },
+      {
+        "author": "Brian Wangenheim",
+        "authorUrl": "https://unsplash.com/@brianwangenheim?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "technology-2",
+        "sourceQuery": "Technology"
+      },
+      {
+        "author": "Zhou (Link) Fang",
+        "authorUrl": "https://unsplash.com/@linkfang?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "technology-0",
+        "sourceQuery": "Technology"
+      },
+      {
+        "author": "Harrison Broadbent",
+        "authorUrl": "https://unsplash.com/@harrisonbroadbent?utm_source=remotion-ai-video-generator&utm_medium=referral",
+        "photoId": "technology-1",
+        "sourceQuery": "Technology"
+      }
+    ]
+  },
+  {
     "narrativeTemplate": "problem-solution",
     "intensity": "balanced",
     "qualityScore": 83,
