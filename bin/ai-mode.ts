@@ -47,6 +47,9 @@ type JobState = {
   brief: string;
   audioMood: string;
   focus: "full" | "hook" | "middle" | "outro";
+  visualSource: "offline" | "online" | "auto";
+  offlineCategory: string;
+  saveOnlineImages: boolean;
   state: "queued" | "writing" | "researching" | "audio" | "bundling" | "rendering" | "complete" | "error";
   stage: "queued" | "script" | "visuals" | "audio" | "bundle" | "render" | "done" | "error";
   progress: number;
@@ -487,6 +490,29 @@ function renderHtml() {
       background: var(--accent-3);
       box-shadow: 0 0 0 6px rgba(142, 247, 199, 0.08);
     }
+    .source-switch {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .source-switch button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: transparent;
+      color: var(--muted-strong);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .source-switch button.active {
+      background: var(--text);
+      color: var(--bg);
+    }
     .hero {
       text-align: center;
       padding: 24px 0 22px;
@@ -677,6 +703,29 @@ function renderHtml() {
     }
     .advanced-fields {
       padding: 0 18px 18px;
+    }
+    .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .check-row input {
+      width: auto;
+      margin-top: 2px;
+    }
+    .check-row strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 2px;
     }
     .brief {
       min-height: 92px;
@@ -1216,7 +1265,7 @@ function renderHtml() {
     }
     .topbar {
       top: 12px;
-      margin-bottom: 34px;
+      margin-bottom: 18px;
       background: rgba(255, 253, 248, 0.86);
       border: 1px solid rgba(50, 43, 34, 0.1);
       box-shadow: 0 18px 40px rgba(66, 53, 36, 0.08);
@@ -1239,37 +1288,24 @@ function renderHtml() {
       border-color: rgba(23, 33, 29, 0.1);
       color: var(--muted-strong);
     }
+    .source-switch {
+      background: #ffffff;
+      border-color: rgba(23, 33, 29, 0.1);
+      box-shadow: 0 8px 18px rgba(79, 64, 40, 0.04);
+    }
+    .source-switch button {
+      color: var(--muted-strong);
+    }
+    .source-switch button.active {
+      background: var(--accent);
+      color: #ffffff;
+    }
     .pill-dot {
       background: var(--accent);
       box-shadow: 0 0 0 6px rgba(8, 127, 114, 0.1);
     }
     .hero {
-      text-align: left;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-      column-gap: 28px;
-      padding: 10px 2px 30px;
-    }
-    .eyebrow,
-    .lede,
-    .hero-actions {
-      grid-column: 1;
-    }
-    h1 {
-      grid-column: 1;
-      margin-inline: 0;
-      max-width: 12ch;
-      color: var(--text);
-      font-size: clamp(42px, 7vw, 86px);
-      letter-spacing: -0.06em;
-    }
-    .lede {
-      margin: 0;
-      max-width: 54ch;
-      color: var(--muted-strong);
-    }
-    .hero-actions {
-      justify-content: flex-start;
+      display: none;
     }
     .hero-note {
       color: var(--muted);
@@ -1395,7 +1431,8 @@ function renderHtml() {
     .metric,
     .status-banner,
     .timeline-item,
-    .credit-row {
+    .credit-row,
+    .check-row {
       background: #ffffff;
       border-color: rgba(23, 33, 29, 0.1);
       color: var(--muted-strong);
@@ -1543,6 +1580,10 @@ function renderHtml() {
         </div>
       </div>
       <div class="topbar-actions">
+        <div class="source-switch" id="headerVisualSource" aria-label="Visual source">
+          <button type="button" data-source="offline" class="active">Offline</button>
+          <button type="button" data-source="online">Online</button>
+        </div>
         <div class="pill"><span class="pill-dot"></span><span id="statusPill">Ready</span></div>
         <div class="pill">Usage <strong id="budgetInline">--</strong></div>
       </div>
@@ -1579,7 +1620,7 @@ function renderHtml() {
             </div>
           </div>
 
-          <div class="field-grid">
+          <div class="field-grid four">
             <div class="field">
               <label for="goal">Goal</label>
               <input id="goal" type="text" placeholder="Educate, persuade, compare, inspire" />
@@ -1592,24 +1633,41 @@ function renderHtml() {
                 <option value="fast">Fast</option>
               </select>
             </div>
+            <div class="field">
+              <label for="seconds">Duration</label>
+              <input id="seconds" type="number" min="5" max="300" step="5" value="10" />
+            </div>
+            <div class="field">
+              <label for="visualSource">Visuals</label>
+              <select id="visualSource">
+                <option value="offline" selected>Offline library</option>
+                <option value="online">Unsplash API</option>
+                <option value="auto">Offline, then online</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="offlineCategory">Asset category</label>
+              <select id="offlineCategory">
+                <option value="auto" selected>Auto match</option>
+                <option value="technology">Technology</option>
+                <option value="renewable">Renewable energy</option>
+                <option value="business">Business</option>
+              </select>
+            </div>
           </div>
 
           <div class="field">
             <label for="prompt">Topic or idea</label>
             <textarea id="prompt" placeholder="Example: Explain why solar energy is becoming cheaper than coal in plain language.">Explain why solar energy is becoming cheaper than coal in plain language.</textarea>
           </div>
-          <div class="field">
-            <label for="brief">Notes</label>
-            <textarea id="brief" class="brief" placeholder="Optional details."></textarea>
-          </div>
           <details class="advanced-panel">
             <summary>Advanced settings <span>Optional</span></summary>
             <div class="advanced-fields">
+              <div class="field">
+                <label for="brief">Notes</label>
+                <textarea id="brief" class="brief" placeholder="Optional details."></textarea>
+              </div>
               <div class="field-grid four">
-                <div class="field">
-                  <label for="seconds">Duration</label>
-                  <input id="seconds" type="number" min="5" max="300" step="5" value="10" />
-                </div>
                 <div class="field">
                   <label for="tone">Tone</label>
                   <select id="tone">
@@ -1724,6 +1782,13 @@ function renderHtml() {
                   </select>
                 </div>
               </div>
+              <label class="check-row" for="saveOnlineImages">
+                <input id="saveOnlineImages" type="checkbox" checked />
+                <span>
+                  <strong>Save online picks into the asset library</strong>
+                  Downloads local copies for future offline tests. Leave off for production-review-safe API runs.
+                </span>
+              </label>
             </div>
           </details>
           <div class="composer-actions">
@@ -1738,20 +1803,20 @@ function renderHtml() {
       </div>
 
       <aside class="right-rail">
+        <section id="attributionCard" class="card panel attribution-card">
+          <div class="section-title">
+            <strong>Unsplash attribution</strong>
+            <span>Required</span>
+          </div>
+          <div id="attributionPane" class="attribution-list" aria-live="polite"></div>
+        </section>
+
         <section class="card panel preview-card">
           <div class="section-title">
             <strong>Preview</strong>
             <span>Latest render</span>
           </div>
           <div id="previewPane" class="preview-pane" aria-live="polite"></div>
-        </section>
-
-        <section class="card panel attribution-card">
-          <div class="section-title">
-            <strong>Unsplash attribution</strong>
-            <span>Required</span>
-          </div>
-          <div id="attributionPane" class="attribution-list" aria-live="polite"></div>
         </section>
 
         <section class="card panel-stack">
@@ -1828,6 +1893,9 @@ function renderHtml() {
       narrativeTemplate: "problem-solution",
       audioMood: "",
       focus: "full",
+      visualSource: "offline",
+      offlineCategory: "auto",
+      saveOnlineImages: true,
     };
 
     const promptEl = document.getElementById("prompt");
@@ -1849,6 +1917,10 @@ function renderHtml() {
     const narrativeTemplateEl = document.getElementById("narrativeTemplate");
     const audioMoodEl = document.getElementById("audioMood");
     const focusEl = document.getElementById("focus");
+    const visualSourceEl = document.getElementById("visualSource");
+    const offlineCategoryEl = document.getElementById("offlineCategory");
+    const saveOnlineImagesEl = document.getElementById("saveOnlineImages");
+    const headerVisualSourceEl = document.getElementById("headerVisualSource");
     const button = document.getElementById("generate");
     const statusEl = document.getElementById("status");
     const statusMetaEl = document.getElementById("statusMeta");
@@ -2173,6 +2245,13 @@ function renderHtml() {
       renderPresetGuide();
     }
 
+    function syncHeaderVisualSource() {
+      headerVisualSourceEl?.querySelectorAll("button").forEach((button) => {
+        const source = button.getAttribute("data-source");
+        button.classList.toggle("active", source === visualSourceEl.value);
+      });
+    }
+
     function renderPresetGuide() {
       if (!presetGuideEl) return;
       const guide = PRESET_GUIDES[stylePresetEl.value] || PRESET_GUIDES.cinematic;
@@ -2334,6 +2413,10 @@ function renderHtml() {
       narrativeTemplateEl.value = DEFAULTS.narrativeTemplate;
       audioMoodEl.value = DEFAULTS.audioMood;
       focusEl.value = DEFAULTS.focus;
+      visualSourceEl.value = DEFAULTS.visualSource;
+      offlineCategoryEl.value = DEFAULTS.offlineCategory;
+      saveOnlineImagesEl.checked = DEFAULTS.saveOnlineImages;
+      syncHeaderVisualSource();
       syncPresetChips();
       renderToneHint();
       renderAudienceHint();
@@ -2378,6 +2461,8 @@ function renderHtml() {
         "Narrative: " + job.narrativeTemplate,
         "Audio mood: " + (job.audioMood || "auto"),
         "Focus: " + job.focus,
+        "Visual source: " + (job.visualSource || "offline"),
+        "Asset category: " + (job.offlineCategory || "auto"),
         "State: " + job.state,
         "Stage: " + job.stage,
         job.qualityScore ? "Quality score: " + job.qualityScore + "/100" : null,
@@ -2516,6 +2601,9 @@ function renderHtml() {
       const narrativeTemplate = narrativeTemplateEl.value;
       const audioMood = audioMoodEl.value;
       const focus = focusEl.value;
+      const visualSource = visualSourceEl.value;
+      const offlineCategory = offlineCategoryEl.value;
+      const saveOnlineImages = saveOnlineImagesEl.checked;
       if (!prompt) {
         alert("Enter a topic or sentence first.");
         return;
@@ -2547,6 +2635,9 @@ function renderHtml() {
           narrativeTemplate,
           audioMood,
           focus,
+          visualSource,
+          offlineCategory,
+          saveOnlineImages,
         }),
       });
 
@@ -2613,10 +2704,14 @@ function renderHtml() {
       narrativeTemplateEl.value = item.narrativeTemplate || narrativeTemplateEl.value;
       audioMoodEl.value = item.audioMood || audioMoodEl.value;
       focusEl.value = target.getAttribute("data-history-focus") || item.focus || focusEl.value;
+      visualSourceEl.value = item.visualSource || visualSourceEl.value;
+      offlineCategoryEl.value = item.offlineCategory || offlineCategoryEl.value;
+      saveOnlineImagesEl.checked = item.saveOnlineImages ?? DEFAULTS.saveOnlineImages;
       syncPresetChips();
       renderToneHint();
       renderAudienceHint();
       renderPlatformHint();
+      syncHeaderVisualSource();
       promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
@@ -2625,6 +2720,17 @@ function renderHtml() {
       promptEl.focus();
       promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
     });
+
+    headerVisualSourceEl?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const source = target.getAttribute("data-source");
+      if (!source) return;
+      visualSourceEl.value = source;
+      syncHeaderVisualSource();
+    });
+
+    visualSourceEl.addEventListener("change", syncHeaderVisualSource);
 
     applyDefaults();
     renderPreview(null);

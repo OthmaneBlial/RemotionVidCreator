@@ -8,7 +8,8 @@ import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 import { generateScript } from "../src/utils/generate-script.js";
 import { generateAmbientAudioTrack } from "../src/utils/audio.js";
-import { fetchUnsplashImages } from "../src/utils/unsplash.js";
+import { fetchUnsplashImages, type UnsplashImage } from "../src/utils/unsplash.js";
+import { fetchOfflineImages, rememberOnlineImages, type VisualSource } from "../src/utils/local-assets.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +43,9 @@ type JobPayload = {
   brief: string;
   audioMood: string;
   focus: "full" | "hook" | "middle" | "outro";
+  visualSource?: VisualSource;
+  offlineCategory?: string;
+  saveOnlineImages?: boolean;
 };
 
 function parseArgs() {
@@ -123,7 +127,10 @@ async function main() {
     state: "researching",
     stage: "visuals",
     progress: 25,
-    message: `Script drafted. Quality score: ${qualityScore}/100.`,
+    message:
+      (payload.visualSource || "offline") === "online"
+        ? `Script drafted. Searching Unsplash. Quality score: ${qualityScore}/100.`
+        : `Script drafted. Loading offline image assets. Quality score: ${qualityScore}/100.`,
     updatedAt: Date.now(),
     script,
   });
@@ -134,7 +141,32 @@ async function main() {
       : payload.visualDensity === "minimal"
         ? Math.max(3, script.sections.length + 1)
         : Math.max(5, script.sections.length + 2);
-  const images = await fetchUnsplashImages(payload.prompt, script, imageCount, 1080, 1920);
+  const visualSource = payload.visualSource || "offline";
+  const offlineCategory = payload.offlineCategory || "auto";
+  let images: UnsplashImage[];
+
+  if (visualSource === "auto") {
+    try {
+      images = await fetchOfflineImages(payload.prompt, script, imageCount, offlineCategory);
+    } catch {
+      images = await fetchUnsplashImages(payload.prompt, script, imageCount, 1080, 1920);
+    }
+  } else {
+    images =
+      visualSource === "online"
+        ? await fetchUnsplashImages(payload.prompt, script, imageCount, 1080, 1920)
+        : await fetchOfflineImages(payload.prompt, script, imageCount, offlineCategory);
+  }
+
+  const shouldSaveOnlineImages = Boolean(payload.saveOnlineImages || process.env.UNSPLASH_SAVE_LOCAL === "1");
+  if ((visualSource === "online" || images.some((image) => image.src.startsWith("http"))) && shouldSaveOnlineImages) {
+    await rememberOnlineImages(
+      images,
+      payload.prompt,
+      offlineCategory,
+      true
+    );
+  }
 
   await writeStatus(statusFile, {
     ...payload,

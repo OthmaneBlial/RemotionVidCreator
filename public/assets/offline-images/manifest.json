@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "updatedAt": "2026-04-29T00:00:00.000Z",
+  "categories": [
+    {
+      "id": "technology",
+      "label": "Technology",
+      "description": "Circuit boards, processors, and technical close-ups for AI, software, automation, and innovation videos.",
+      "keywords": ["technology", "tech", "ai", "artificial intelligence", "software", "automation", "data", "computer", "innovation", "digital", "circuit", "processor"],
+      "images": [
+        {
+          "src": "assets/offline-images/technology/circuit-components-zhou-fang.jpg",
+          "alt": "Electronic components on a table",
+          "author": "Zhou (Link) Fang",
+          "authorUrl": "https://unsplash.com/@linkfang?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@linkfang?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["circuit", "electronics", "components", "technology"]
+        },
+        {
+          "src": "assets/offline-images/technology/circuit-board-harrison-broadbent.jpg",
+          "alt": "Blue circuit board close-up",
+          "author": "Harrison Broadbent",
+          "authorUrl": "https://unsplash.com/@harrisonbroadbent?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@harrisonbroadbent?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["circuit board", "hardware", "microchip", "processor"]
+        },
+        {
+          "src": "assets/offline-images/technology/circuit-detail-brian-wangenheim.jpg",
+          "alt": "Silver and black circuit board",
+          "author": "Brian Wangenheim",
+          "authorUrl": "https://unsplash.com/@brianwangenheim?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@brianwangenheim?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["hardware", "electronics", "semiconductor", "technology"]
+        }
+      ]
+    },
+    {
+      "id": "renewable",
+      "label": "Renewable Energy",
+      "description": "Solar panels, wind farms, and sustainability imagery for climate, energy, and environment videos.",
+      "keywords": ["renewable", "energy", "solar", "wind", "climate", "environment", "sustainability", "green", "electricity", "power", "clean energy"],
+      "images": [
+        {
+          "src": "assets/offline-images/renewable/wind-farm-thomas-richter.jpg",
+          "alt": "Aerial view of wind turbines near fields",
+          "author": "Thomas Richter",
+          "authorUrl": "https://unsplash.com/@thomasrichter?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@thomasrichter?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["wind", "wind farm", "renewable", "energy"]
+        },
+        {
+          "src": "assets/offline-images/renewable/solar-field-andreas-guecklhorn.jpg",
+          "alt": "Aerial view of blue solar panels in a grass field",
+          "author": "Andreas Gücklhorn",
+          "authorUrl": "https://unsplash.com/@draufsicht?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@draufsicht?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["solar", "solar panels", "renewable", "green energy"]
+        },
+        {
+          "src": "assets/offline-images/renewable/solar-panels-anders-j.jpg",
+          "alt": "White and blue solar panels from above",
+          "author": "Anders J",
+          "authorUrl": "https://unsplash.com/@aj5photos?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@aj5photos?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["solar panels", "sustainability", "green energy", "renewable"]
+        }
+      ]
+    },
+    {
+      "id": "business",
+      "label": "Business",
+      "description": "Meetings, teams, strategy, and collaboration imagery for startup and workplace videos.",
+      "keywords": ["business", "startup", "team", "meeting", "office", "strategy", "growth", "work", "company", "founder", "leadership", "collaboration"],
+      "images": [
+        {
+          "src": "assets/offline-images/business/meeting-wocintechchat.jpg",
+          "alt": "People in a business meeting around a conference table",
+          "author": "Christina @ wocintechchat.com",
+          "authorUrl": "https://unsplash.com/@wocintechchat?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@wocintechchat?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["meeting", "team", "business", "office"]
+        },
+        {
+          "src": "assets/offline-images/business/workshop-jason-goodman.jpg",
+          "alt": "Team workshop with people looking at a computer",
+          "author": "Jason Goodman",
+          "authorUrl": "https://unsplash.com/@jasongoodman_youxventures?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@jasongoodman_youxventures?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["workshop", "teamwork", "collaboration", "startup"]
+        },
+        {
+          "src": "assets/offline-images/business/conversation-amy-hirschi.jpg",
+          "alt": "Two people having a business conversation at a table",
+          "author": "Amy Hirschi",
+          "authorUrl": "https://unsplash.com/@amyhirschi?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "source": "unsplash",
+          "sourceUrl": "https://unsplash.com/@amyhirschi?utm_source=remotion-ai-video-generator&utm_medium=referral",
+          "keywords": ["conversation", "office", "business", "interview"]
+        }
+      ]
+    }
+  ]
+}

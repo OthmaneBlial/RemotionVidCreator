@@ -25,6 +25,13 @@ interface ImageSlideshowProps {
   blurEdges?: boolean;
 }
 
+function resolveImageSrc(src: string): string {
+  if (/^https?:\/\//i.test(src) || src.startsWith("data:") || src.startsWith("/")) {
+    return src;
+  }
+  return staticFile(src);
+}
+
 const UnsplashAttribution = ({
   author,
   authorUrl,
@@ -158,6 +165,7 @@ export const ImageSlideshow = ({
   }, [imageFrame, durationPerImage, transitionDuration]);
 
   const currentImage = images[imageIndex];
+  const currentImageSrc = resolveImageSrc(currentImage.src);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
@@ -174,7 +182,7 @@ export const ImageSlideshow = ({
           }}
         >
           <img
-            src={currentImage.src}
+            src={currentImageSrc}
             alt={currentImage.alt || "Background"}
             style={{
               width: "100%",
@@ -260,11 +268,12 @@ export const KenBurnsImage = ({
   );
 
   const scale = interpolate(progress, [0, 1], [scaleStart, scaleEnd]);
+  const imageSrc = resolveImageSrc(src);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
       <img
-        src={src}
+        src={imageSrc}
         alt="Background"
         style={{
           position: "absolute",
@@ -316,6 +325,7 @@ export const ParallaxImage = ({
   overlayOpacity = 0.3,
 }: ParallaxImageProps) => {
   const frame = useCurrentFrame();
+  const imageSrc = resolveImageSrc(src);
 
   const y = interpolate(frame, [0, 30], [-parallaxIntensity, 0], {
     extrapolateRight: "clamp",
@@ -324,7 +334,7 @@ export const ParallaxImage = ({
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <img
-        src={src}
+        src={imageSrc}
         alt="Background"
         style={{
           position: "absolute",
