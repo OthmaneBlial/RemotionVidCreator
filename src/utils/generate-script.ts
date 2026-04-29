@@ -169,7 +169,7 @@ export async function generateScript(
           focus,
         });
         console.log("   ✅ Demo script generated successfully");
-        return script;
+        return fitScriptToDuration(script, options);
       }
       const script = await generateAIScript(
         topic,
@@ -195,7 +195,7 @@ export async function generateScript(
         }
       );
       console.log("   ✅ AI script generated successfully");
-      return script;
+      return fitScriptToDuration(script, options);
     } catch (error) {
       console.error("   ⚠️ AI generation failed, falling back to template");
       console.error(`   Error: ${(error as Error).message}`);
@@ -208,7 +208,7 @@ export async function generateScript(
     const searchResults = await searchTopic(topic);
 
     // Generate script based on search results
-    return buildScriptFromSearch(topic, searchResults, tone, complexity, {
+    return fitScriptToDuration(buildScriptFromSearch(topic, searchResults, tone, complexity, {
       stylePreset,
       audience,
       platform,
@@ -224,11 +224,11 @@ export async function generateScript(
       targetDurationSeconds,
       audioMood,
       focus,
-    });
+    }), options);
   } catch (error) {
     console.error("Error generating script:", error);
     // Fallback to template-based generation
-    return generateTemplateScript(topic, {
+    return fitScriptToDuration(generateTemplateScript(topic, {
       stylePreset,
       audience,
       platform,
@@ -245,8 +245,102 @@ export async function generateScript(
       tone,
       audioMood,
       focus,
-    });
+    }), options);
   }
+}
+
+function fitScriptToDuration(script: ExplainerScript, options: GenerateScriptOptions): ExplainerScript {
+  const seconds = options.targetDurationSeconds ?? script.estimatedDurationSeconds;
+  if (!seconds || seconds > 15) {
+    return script;
+  }
+
+  const maxSections = seconds <= 10 ? 1 : 2;
+  const sourceSections = script.sections.length > 0
+    ? script.sections
+    : [{ title: "Key idea", content: script.hook, imageKeywords: script.topicImages }];
+  const shortHook = buildShortHook(options.topic, script.hook);
+  const sections = sourceSections.slice(0, maxSections).map((section, index) => ({
+    title: index === 0 ? "The reason" : shortenWords(section.title || "What changes", 5, false),
+    content: shortenWords(
+      index === 0 ? buildShortInsight(options.topic, section.content || script.hook) : cleanSentence(section.content),
+      seconds <= 10 ? 18 : 22,
+      false
+    ),
+    imageKeywords: section.imageKeywords,
+  }));
+
+  return {
+    ...script,
+    title: shortenWords(cleanSentence(script.title), 8, false),
+    hook: shortenWords(shortHook, seconds <= 10 ? 14 : 18, false),
+    sections,
+    outro: "",
+    cta: undefined,
+    estimatedDurationSeconds: seconds,
+    creativeDirection: script.creativeDirection
+      ? {
+          ...script.creativeDirection,
+          intensity: options.intensity === "wild" ? "balanced" : script.creativeDirection.intensity,
+          motionLevel: seconds <= 10 ? "minimal" : script.creativeDirection.motionLevel,
+          visualDensity: seconds <= 10 ? "minimal" : script.creativeDirection.visualDensity,
+        }
+      : script.creativeDirection,
+    scenePlan: script.scenePlan?.slice(0, maxSections + 1),
+  };
+}
+
+function cleanSentence(value: string): string {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,!?])/g, "$1")
+    .trim();
+}
+
+function shortenWords(value: string, maxWords: number, addEllipsis = true): string {
+  const words = cleanSentence(value).split(" ").filter(Boolean);
+  if (words.length <= maxWords) {
+    return words.join(" ");
+  }
+  return `${words.slice(0, maxWords).join(" ")}${addEllipsis ? "..." : ""}`;
+}
+
+function buildShortHook(topic: string, fallback: string): string {
+  const normalized = topic.toLowerCase();
+  if (normalized.includes("solar") && normalized.includes("coal")) {
+    return "Solar is not just cleaner; it is becoming the cheaper default.";
+  }
+  if (normalized.includes("ai agent") || normalized.includes("agents")) {
+    return "AI agents matter when they remove the small tasks that slow a team down.";
+  }
+  if (normalized.includes("creator") && (normalized.includes("brand") || normalized.includes("ads"))) {
+    return "Creator-led brands win because people trust a person before they trust an ad.";
+  }
+  if (normalized.includes("electric") && normalized.includes("car")) {
+    return "Electric cars are shifting from niche technology to the practical default.";
+  }
+  return shortenWords(cleanSentence(fallback || `The short version: ${topic} changes the tradeoff.`), 14, false);
+}
+
+function buildShortInsight(topic: string, fallback: string): string {
+  const normalized = topic.toLowerCase();
+  if (normalized.includes("solar") && normalized.includes("coal")) {
+    return "Solar panels keep getting cheaper, while coal still pays for fuel, transport, and maintenance.";
+  }
+  if (normalized.includes("ai agent") || normalized.includes("agents")) {
+    return "Agents handle repeatable work across tools, so people spend less time switching context.";
+  }
+  if (normalized.includes("creator") && (normalized.includes("brand") || normalized.includes("ads"))) {
+    return "Creators earn trust before the pitch; ads have to buy attention again every time.";
+  }
+  if (normalized.includes("electric") && normalized.includes("car")) {
+    return "Batteries improve, charging expands, and running costs keep pushing electric cars forward.";
+  }
+  return shortenWords(
+    cleanSentence(fallback || `${topic} matters when it removes a cost, delay, or confusion people already feel.`),
+    18,
+    false
+  );
 }
 
 /**

@@ -4,6 +4,7 @@ export interface GeneratedAudioTrack {
   src: string;
   durationSeconds: number;
   mood: string;
+  volume: number;
 }
 
 /**
@@ -23,11 +24,12 @@ export async function generateAmbientAudioTrack(
     src,
     durationSeconds,
     mood,
+    volume: 0.18,
   };
 }
 
 function createAmbientWav(topic: string, durationSeconds: number, mood: string): Buffer {
-  const sampleRate = 22050;
+  const sampleRate = 16000;
   const channels = 1;
   const totalSamples = Math.max(1, Math.floor(durationSeconds * sampleRate));
   const bytesPerSample = 2;
@@ -35,9 +37,10 @@ function createAmbientWav(topic: string, durationSeconds: number, mood: string):
   const buffer = Buffer.alloc(44 + dataSize);
 
   const seed = crypto.createHash("sha256").update(`${topic}:${mood}`).digest();
-  const baseFrequency = 82 + (seed[0] % 48);
-  const harmonyOffset = (seed[1] % 7) - 3;
-  const swingRate = 0.15 + (seed[2] % 6) * 0.03;
+  const baseFrequency = 110 + (seed[0] % 18);
+  const harmonyOffset = (seed[1] % 2) === 0 ? 4 : 3;
+  const fifthOffset = 7;
+  const pulseRate = 0.08 + (seed[2] % 4) * 0.02;
   const phase = (seed[3] / 255) * Math.PI * 2;
 
   writeWavHeader(buffer, totalSamples, channels, sampleRate, bytesPerSample);
@@ -47,19 +50,14 @@ function createAmbientWav(topic: string, durationSeconds: number, mood: string):
     const t = i / sampleRate;
     const progress = t / durationSeconds;
 
-    const motifStep = Math.floor(t / 0.75) % 4;
-    const noteShift = [0, 3, 7, 10][motifStep];
-    const currentFrequency = baseFrequency * Math.pow(2, (noteShift + harmonyOffset) / 12);
+    const root = Math.sin(2 * Math.PI * baseFrequency * t + phase) * 0.2;
+    const third = Math.sin(2 * Math.PI * baseFrequency * Math.pow(2, harmonyOffset / 12) * t + phase * 0.7) * 0.13;
+    const fifth = Math.sin(2 * Math.PI * baseFrequency * Math.pow(2, fifthOffset / 12) * t + phase * 0.4) * 0.1;
+    const bass = Math.sin(2 * Math.PI * (baseFrequency * 0.5) * t + phase) * 0.18;
+    const pulse = 0.92 + Math.sin(2 * Math.PI * pulseRate * t + phase) * 0.08;
+    const fade = Math.min(1, Math.min(progress * 5, (1 - progress) * 5));
 
-    const lowPad = Math.sin(2 * Math.PI * currentFrequency * 0.5 * t + phase) * 0.22;
-    const pulse = Math.sin(2 * Math.PI * swingRate * t + phase) * 0.08;
-    const shimmer = Math.sin(2 * Math.PI * currentFrequency * 1.997 * t) * 0.06;
-    const tone = Math.sin(2 * Math.PI * currentFrequency * t) * 0.18;
-    const bass = Math.sin(2 * Math.PI * (currentFrequency * 0.25) * t) * 0.24;
-    const noise = (((seed[(i * 7) % seed.length] ?? 128) / 255) - 0.5) * 0.02;
-    const fade = Math.min(1, Math.min(progress * 4, (1 - progress) * 5));
-
-    const sample = clampSample((tone + bass + lowPad + shimmer + pulse + noise) * fade);
+    const sample = clampSample((root + third + fifth + bass) * pulse * fade * 0.45);
     buffer.writeInt16LE(Math.floor(sample * 32767), offset);
     offset += 2;
   }

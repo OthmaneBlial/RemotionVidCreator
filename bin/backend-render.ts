@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import "../src/utils/load-env.js";
-import { readFile, writeFile } from "fs/promises";
+import crypto from "crypto";
+import { readFile, readdir, rename, rm, stat, writeFile } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { bundle } from "@remotion/bundler";
@@ -14,6 +15,9 @@ import { fetchOfflineImages, rememberOnlineImages, type VisualSource } from "../
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
+const bundleCacheDir = path.join(projectRoot, ".cache", "remotion-bundle");
+const bundleManifestFile = path.join(bundleCacheDir, "manifest.json");
+let statusWriteQueue = Promise.resolve();
 
 type JobPayload = {
   id: string;
@@ -48,6 +52,16 @@ type JobPayload = {
   saveOnlineImages?: boolean;
 };
 
+type RenderTimings = {
+  scriptMs?: number;
+  visualsMs?: number;
+  audioMs?: number;
+  bundleMs?: number;
+  renderMs?: number;
+  totalMs?: number;
+  bundleCached?: boolean;
+};
+
 function parseArgs() {
   const args = process.argv.slice(2);
   const map: Record<string, string> = {};
@@ -68,7 +82,13 @@ function parseArgs() {
 }
 
 async function writeStatus(statusFile: string, status: Record<string, unknown>) {
-  await writeFile(statusFile, JSON.stringify(status, null, 2), "utf8");
+  const write = async () => {
+    const tempFile = `${statusFile}.${process.pid}.${Date.now()}.tmp`;
+    await writeFile(tempFile, JSON.stringify(status, null, 2), "utf8");
+    await rename(tempFile, statusFile);
+  };
+  statusWriteQueue = statusWriteQueue.then(write, write);
+  await statusWriteQueue;
 }
 
 function scoreGeneration(payload: JobPayload, script: Awaited<ReturnType<typeof generateScript>>) {
@@ -86,8 +106,108 @@ function scoreGeneration(payload: JobPayload, script: Awaited<ReturnType<typeof 
   return Math.max(0, Math.min(100, score));
 }
 
+function getImageCount(payload: JobPayload, sectionCount: number): number {
+  if (payload.seconds <= 15) {
+    return payload.seconds <= 10 ? 2 : 3;
+  }
+
+  return payload.visualDensity === "rich"
+    ? Math.max(8, sectionCount * 2)
+    : payload.visualDensity === "minimal"
+      ? Math.max(3, sectionCount + 1)
+      : Math.max(5, sectionCount + 2);
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await stat(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function collectFingerprintEntries(targetPath: string, entries: string[]): Promise<void> {
+  if (!(await pathExists(targetPath))) {
+    return;
+  }
+
+  const details = await stat(targetPath);
+  if (details.isDirectory()) {
+    const children = await readdir(targetPath);
+    for (const child of children.sort()) {
+      await collectFingerprintEntries(path.join(targetPath, child), entries);
+    }
+    return;
+  }
+
+  const relativePath = path.relative(projectRoot, targetPath);
+  entries.push(`${relativePath}:${details.size}:${Math.round(details.mtimeMs)}`);
+}
+
+async function getBundleFingerprint(): Promise<string> {
+  const entries: string[] = [];
+  await collectFingerprintEntries(path.join(projectRoot, "src"), entries);
+  await collectFingerprintEntries(path.join(projectRoot, "public", "assets", "offline-images"), entries);
+  await collectFingerprintEntries(path.join(projectRoot, "package.json"), entries);
+  await collectFingerprintEntries(path.join(projectRoot, "tsconfig.json"), entries);
+  return crypto.createHash("sha256").update(entries.join("\n")).digest("hex");
+}
+
+async function getBundleLocation(
+  statusFile: string,
+  payload: JobPayload,
+  qualityScore: number,
+  timings: RenderTimings
+): Promise<{ bundleLocation: string; cached: boolean }> {
+  const fingerprint = await getBundleFingerprint();
+  const manifest = await readFile(bundleManifestFile, "utf8")
+    .then((raw) => JSON.parse(raw) as { fingerprint?: string })
+    .catch(() => null);
+  const cached = manifest?.fingerprint === fingerprint && await pathExists(path.join(bundleCacheDir, "index.html"));
+
+  if (cached) {
+    await writeStatus(statusFile, {
+      ...payload,
+      qualityScore,
+      state: "bundling",
+      stage: "bundle",
+      progress: 72,
+      message: "Using cached Remotion bundle...",
+      updatedAt: Date.now(),
+      timings: {
+        ...timings,
+        bundleCached: true,
+      },
+    });
+    return { bundleLocation: bundleCacheDir, cached: true };
+  }
+
+  await rm(bundleCacheDir, { recursive: true, force: true });
+  const bundleLocation = await bundle({
+    entryPoint: path.join(projectRoot, "src", "index.ts"),
+    outDir: bundleCacheDir,
+    enableCaching: true,
+    onProgress: (progress) => {
+      void writeStatus(statusFile, {
+        ...payload,
+        qualityScore,
+        state: "bundling",
+        stage: "bundle",
+        progress: Math.min(72, 60 + Math.round(progress * 12)),
+        message: "Bundling the Remotion project...",
+        updatedAt: Date.now(),
+      });
+    },
+  });
+  await writeFile(bundleManifestFile, JSON.stringify({ fingerprint, updatedAt: Date.now() }, null, 2), "utf8");
+  return { bundleLocation, cached: false };
+}
+
 async function main() {
   const { jobFile, statusFile } = parseArgs();
+  const startedAt = performance.now();
+  const timings: RenderTimings = {};
   const payload = JSON.parse(await readFile(jobFile, "utf8")) as JobPayload;
   const outputDir = path.join(process.cwd(), "output", "ai-mode");
   await writeStatus(statusFile, {
@@ -119,6 +239,7 @@ async function main() {
     audioMood: payload.audioMood,
     focus: payload.focus,
   });
+  timings.scriptMs = Math.round(performance.now() - startedAt);
 
   const qualityScore = scoreGeneration(payload, script);
   await writeStatus(statusFile, {
@@ -135,12 +256,7 @@ async function main() {
     script,
   });
 
-  const imageCount =
-    payload.visualDensity === "rich"
-      ? Math.max(8, script.sections.length * 2)
-      : payload.visualDensity === "minimal"
-        ? Math.max(3, script.sections.length + 1)
-        : Math.max(5, script.sections.length + 2);
+  const imageCount = getImageCount(payload, script.sections.length);
   const visualSource = payload.visualSource || "offline";
   const offlineCategory = payload.offlineCategory || "auto";
   let images: UnsplashImage[];
@@ -157,6 +273,7 @@ async function main() {
         ? await fetchUnsplashImages(payload.prompt, script, imageCount, 1080, 1920)
         : await fetchOfflineImages(payload.prompt, script, imageCount, offlineCategory);
   }
+  timings.visualsMs = Math.round(performance.now() - startedAt - (timings.scriptMs ?? 0));
 
   const shouldSaveOnlineImages = Boolean(payload.saveOnlineImages || process.env.UNSPLASH_SAVE_LOCAL === "1");
   if ((visualSource === "online" || images.some((image) => image.src.startsWith("http"))) && shouldSaveOnlineImages) {
@@ -185,6 +302,9 @@ async function main() {
     payload.seconds,
     payload.audioMood || script.audioMood
   );
+  timings.audioMs = Math.round(
+    performance.now() - startedAt - (timings.scriptMs ?? 0) - (timings.visualsMs ?? 0)
+  );
 
   await writeStatus(statusFile, {
     ...payload,
@@ -196,26 +316,25 @@ async function main() {
     updatedAt: Date.now(),
     script,
     images,
-    audio,
+    audioMeta: {
+      durationSeconds: audio.durationSeconds,
+      mood: audio.mood,
+    },
+    timings,
   });
 
   await writeFile(path.join(outputDir, ".keep"), "", "utf8").catch(() => {});
   const outputPath = path.join(outputDir, `${payload.prompt.toLowerCase().replace(/\s+/g, "-").slice(0, 64) || "ai-video"}-${Date.now()}.mp4`);
 
-  const bundleLocation = await bundle({
-    entryPoint: path.join(projectRoot, "src", "index.ts"),
-    onProgress: (progress) => {
-      void writeStatus(statusFile, {
-        ...payload,
-        qualityScore,
-        state: "bundling",
-        stage: "bundle",
-        progress: Math.min(72, 60 + Math.round(progress * 12)),
-        message: "Bundling the Remotion project...",
-        updatedAt: Date.now(),
-      });
-    },
-  });
+  const { bundleLocation, cached: bundleCached } = await getBundleLocation(statusFile, payload, qualityScore, timings);
+  timings.bundleMs = Math.round(
+    performance.now() -
+      startedAt -
+      (timings.scriptMs ?? 0) -
+      (timings.visualsMs ?? 0) -
+      (timings.audioMs ?? 0)
+  );
+  timings.bundleCached = bundleCached;
 
   await writeStatus(statusFile, {
     ...payload,
@@ -253,6 +372,9 @@ async function main() {
     composition,
     serveUrl: bundleLocation,
     codec: "h264",
+    crf: Number(process.env.REMOTION_CRF || 23),
+    imageFormat: "jpeg",
+    jpegQuality: 88,
     outputLocation: outputPath,
     inputProps: {
       topic: script.title,
@@ -280,6 +402,14 @@ async function main() {
       });
     },
   });
+  timings.renderMs = Math.round(
+    performance.now() -
+      startedAt -
+      (timings.scriptMs ?? 0) -
+      (timings.visualsMs ?? 0) -
+      (timings.audioMs ?? 0) -
+      (timings.bundleMs ?? 0)
+  );
 
   await writeStatus(statusFile, {
     ...payload,
@@ -292,7 +422,14 @@ async function main() {
     updatedAt: Date.now(),
     script,
     images,
-    audio,
+    audioMeta: {
+      durationSeconds: audio.durationSeconds,
+      mood: audio.mood,
+    },
+    timings: {
+      ...timings,
+      totalMs: Math.round(performance.now() - startedAt),
+    },
   });
 }
 

@@ -87,6 +87,8 @@ def compact_history_entry(entry: dict):
     "outputPath",
     "error",
     "updatedAt",
+    "timings",
+    "audioMeta",
   }
   compact = {key: entry.get(key) for key in keep_keys if key in entry}
   images = entry.get("images")

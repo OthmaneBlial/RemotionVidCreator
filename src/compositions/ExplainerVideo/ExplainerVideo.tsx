@@ -50,6 +50,7 @@ export const ExplainerVideo = ({
 }: ExplainerVideoProps) => {
   const { fps } = useVideoConfig();
   const creativeDirection = script.creativeDirection;
+  const isShortCut = Boolean(targetDurationSeconds && targetDurationSeconds <= 15);
   const effectiveStylePreset = creativeDirection?.stylePreset || stylePreset || "cinematic";
   const effectiveIntensity = creativeDirection?.intensity || intensity || "balanced";
   const effectiveMotion = creativeDirection?.motionLevel || motionLevel || "medium";
@@ -75,8 +76,21 @@ export const ExplainerVideo = ({
       : effectiveStylePreset === "educational"
         ? "Explained Clearly"
         : effectiveStylePreset === "documentary"
-          ? "Context and Clarity"
-          : "Explained";
+        ? "Context and Clarity"
+        : "Explained";
+
+  if (isShortCut) {
+    return (
+      <ShortCutVideo
+        script={script}
+        images={images.slice(0, 2)}
+        audio={audio}
+        accentColor={effectiveAccent}
+        primaryColor={primaryColor}
+        fontSizeScale={fontSizeScale}
+      />
+    );
+  }
 
   // Timing for each section (in frames) - scaled to the requested duration when provided
   const defaultIntroDuration = 5 * fps;
@@ -114,7 +128,7 @@ export const ExplainerVideo = ({
 
   return (
     <AbsoluteFill>
-      {audio?.src ? <Audio src={audio.src} volume={audio.volume ?? 0.55} /> : null}
+      {audio?.src ? <Audio src={audio.src} volume={audio.volume ?? 0.24} /> : null}
 
       {/* Dynamic Background */}
       <GradientMesh
@@ -206,6 +220,222 @@ export const ExplainerVideo = ({
       {/* Subtle Scanlines */}
       <Scanlines opacity={0.02} lineSize={2} />
     </AbsoluteFill>
+  );
+};
+
+interface ShortCutVideoProps {
+  script: ExplainerVideoProps["script"];
+  images: Array<{ src: string; alt?: string; author?: string; authorUrl?: string }>;
+  audio?: ExplainerVideoProps["audio"];
+  accentColor: string;
+  primaryColor: string;
+  fontSizeScale: number;
+}
+
+const ShortCutVideo = ({
+  script,
+  images,
+  audio,
+  accentColor,
+  primaryColor,
+  fontSizeScale,
+}: ShortCutVideoProps) => {
+  const { durationInFrames } = useVideoConfig();
+  const firstSceneDuration = Math.max(1, Math.round(durationInFrames * 0.46));
+  const secondSceneDuration = Math.max(1, durationInFrames - firstSceneDuration);
+  const section = script.sections[0] || {
+    title: "Key idea",
+    content: script.hook,
+  };
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: primaryColor }}>
+      {audio?.src ? <Audio src={audio.src} volume={audio.volume ?? 0.18} /> : null}
+      <Series>
+        <Series.Sequence durationInFrames={firstSceneDuration}>
+          <ShortScene
+            eyebrow="Short cut"
+            title={script.title}
+            body={script.hook}
+            image={images[0] || images[1]}
+            accentColor={accentColor}
+            primaryColor={primaryColor}
+            fontSizeScale={fontSizeScale}
+          />
+        </Series.Sequence>
+        <Series.Sequence durationInFrames={secondSceneDuration}>
+          <ShortScene
+            eyebrow="The point"
+            title={section.title}
+            body={section.content}
+            image={images[1] || images[0]}
+            accentColor={accentColor}
+            primaryColor={primaryColor}
+            fontSizeScale={fontSizeScale}
+            align="bottom"
+          />
+        </Series.Sequence>
+      </Series>
+      <ShortProgress color={accentColor} />
+    </AbsoluteFill>
+  );
+};
+
+interface ShortSceneProps {
+  eyebrow: string;
+  title: string;
+  body: string;
+  image?: { src: string; alt?: string; author?: string; authorUrl?: string };
+  accentColor: string;
+  primaryColor: string;
+  fontSizeScale: number;
+  align?: "center" | "bottom";
+}
+
+const ShortScene = ({
+  eyebrow,
+  title,
+  body,
+  image,
+  accentColor,
+  primaryColor,
+  fontSizeScale,
+  align = "center",
+}: ShortSceneProps) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const fadeIn = interpolate(frame, [0, 16], [0, 1], { extrapolateRight: "clamp" });
+  const y = interpolate(frame, [0, 18], [28, 0], { extrapolateRight: "clamp" });
+  const titleSize = Math.max(58, 74 * fontSizeScale);
+  const bodySize = Math.max(32, 38 * fontSizeScale);
+
+  return (
+    <AbsoluteFill style={{ overflow: "hidden", backgroundColor: primaryColor }}>
+      {image ? (
+        <KenBurnsImage
+          src={image.src}
+          zoomDirection="in"
+          intensity={0.45}
+          overlayOpacity={0.35}
+          author={image.author}
+          authorUrl={image.authorUrl}
+        />
+      ) : (
+        <GradientMesh colors={[primaryColor, "#13231f", "#243a35"]} speed={0.12} />
+      )}
+
+      <AbsoluteFill
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.42) 50%, rgba(0,0,0,0.72) 100%)",
+        }}
+      />
+
+      <AbsoluteFill
+        style={{
+          justifyContent: align === "bottom" ? "flex-end" : "center",
+          padding: "96px 78px 132px",
+        }}
+      >
+        <div
+          style={{
+            opacity: fadeIn,
+            transform: `translateY(${y}px)`,
+          }}
+        >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: 22,
+              padding: "10px 16px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.13)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              color: "#ffffff",
+              fontFamily: "Inter, sans-serif",
+              fontSize: 17,
+              fontWeight: 700,
+              letterSpacing: 2.8,
+              textTransform: "uppercase",
+            }}
+          >
+            <span style={{ width: 9, height: 9, borderRadius: 99, background: accentColor }} />
+            {eyebrow}
+          </div>
+          <h1
+            style={{
+              margin: 0,
+              maxWidth: 920,
+              color: "#ffffff",
+              fontFamily: "CalSans, sans-serif",
+              fontSize: titleSize,
+              lineHeight: 0.96,
+              letterSpacing: -2.2,
+              textShadow: "0 10px 50px rgba(0,0,0,0.45)",
+            }}
+          >
+            {title}
+          </h1>
+          <p
+            style={{
+              margin: "28px 0 0",
+              maxWidth: 860,
+              color: "rgba(255,255,255,0.88)",
+              fontFamily: "Inter, sans-serif",
+              fontSize: bodySize,
+              lineHeight: 1.18,
+              textShadow: "0 8px 32px rgba(0,0,0,0.45)",
+            }}
+          >
+            {body}
+          </p>
+        </div>
+      </AbsoluteFill>
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 28,
+          borderRadius: 42,
+          border: "1px solid rgba(255,255,255,0.16)",
+          boxShadow: `inset 0 0 0 1px ${accentColor}22`,
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
+const ShortProgress = ({ color }: { color: string }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const width = interpolate(frame, [0, durationInFrames - 1], [0, 100], {
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 42,
+        right: 42,
+        bottom: 44,
+        height: 8,
+        borderRadius: 999,
+        background: "rgba(255,255,255,0.18)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          width: `${width}%`,
+          height: "100%",
+          borderRadius: 999,
+          background: color,
+        }}
+      />
+    </div>
   );
 };
 
