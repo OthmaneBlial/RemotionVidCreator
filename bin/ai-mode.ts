@@ -1811,14 +1811,6 @@ function renderHtml() {
           <div id="attributionPane" class="attribution-list" aria-live="polite"></div>
         </section>
 
-        <section class="card panel preview-card">
-          <div class="section-title">
-            <strong>Preview</strong>
-            <span>Latest render</span>
-          </div>
-          <div id="previewPane" class="preview-pane" aria-live="polite"></div>
-        </section>
-
         <section class="card panel-stack">
           <div class="panel">
             <div class="section-title">
@@ -1852,6 +1844,17 @@ function renderHtml() {
               <div id="bar" class="bar"></div>
             </div>
           </div>
+        </section>
+
+        <section class="card panel preview-card">
+          <div class="section-title">
+            <strong>Preview</strong>
+            <span>Latest render</span>
+          </div>
+          <div id="previewPane" class="preview-pane" aria-live="polite"></div>
+        </section>
+
+        <section class="card panel-stack">
           <div class="panel">
             <div class="section-title">
               <strong>History</strong>
