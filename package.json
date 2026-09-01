@@ -13,17 +13,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@remotion/bundler": "^4.0.269",
-    "@remotion/cli": "^4.0.269",
-    "@remotion/renderer": "^4.0.269",
-    "@remotion/tailwind": "^4.0.269",
+    "@remotion/bundler": "4.0.520",
+    "@remotion/cli": "4.0.520",
+    "@remotion/renderer": "4.0.520",
+    "@remotion/tailwind": "4.0.520",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "remotion": "^4.0.269",
-    "zod": "^3.22.3"
+    "remotion": "4.0.520",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@remotion/eslint-config": "^4.0.269",
+    "@remotion/eslint-config": "4.0.520",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
