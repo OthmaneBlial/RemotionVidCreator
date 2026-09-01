@@ -4,13 +4,7 @@ import "../src/utils/load-env.js";
 import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
-import { exec, spawn } from "child_process";
-import * as fs from "fs/promises";
-import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition } from "@remotion/renderer";
-import { generateScript } from "../src/utils/generate-script.js";
-import { generateAmbientAudioTrack } from "../src/utils/audio.js";
-import { fetchUnsplashImages, getUnsplashUsage } from "../src/utils/unsplash.js";
+import { spawn } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,97 +12,6 @@ const projectRoot = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 3005);
 const backendPort = Number(process.env.BACKEND_PORT || 3010);
 let backendProcess: ReturnType<typeof spawn> | null = null;
-
-type JobState = {
-  id: string;
-  prompt: string;
-  seconds: number;
-  tone:
-    | "informative"
-    | "casual"
-    | "professional"
-    | "dramatic"
-    | "humorous"
-    | "storytelling"
-    | "calm"
-    | "energetic"
-    | "subtle"
-    | "urgent";
-  complexity: "simple" | "medium" | "detailed";
-  stylePreset: "cinematic" | "educational" | "bold" | "playful" | "premium" | "documentary";
-  audience: "general" | "beginners" | "students" | "creators" | "founders" | "executives" | "professionals";
-  platform: "tiktok" | "reels" | "shorts" | "vertical";
-  intensity: "safe" | "balanced" | "wild";
-  motionLevel: "minimal" | "medium" | "high";
-  visualDensity: "minimal" | "balanced" | "rich";
-  narrativeTemplate: "problem-solution" | "myth-busting" | "timeline" | "comparison" | "transformation";
-  goal: string;
-  pacing: "calm" | "steady" | "fast";
-  brief: string;
-  audioMood: string;
-  focus: "full" | "hook" | "middle" | "outro";
-  visualSource: "offline" | "online" | "auto";
-  offlineCategory: string;
-  saveOnlineImages: boolean;
-  state: "queued" | "writing" | "researching" | "audio" | "bundling" | "rendering" | "complete" | "error";
-  stage: "queued" | "script" | "visuals" | "audio" | "bundle" | "render" | "done" | "error";
-  progress: number;
-  message: string;
-  qualityScore?: number;
-  outputPath?: string;
-  error?: string;
-  updatedAt: number;
-};
-
-const jobs = new Map<string, JobState>();
-const history: JobState[] = [];
-let activeJobId: string | null = null;
-
-function createId(): string {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .slice(0, 64) || "ai-video";
-}
-
-function updateJob(id: string, patch: Partial<JobState>) {
-  const job = jobs.get(id);
-  if (!job) return;
-  jobs.set(id, {
-    ...job,
-    ...patch,
-    updatedAt: Date.now(),
-  });
-}
-
-function scoreGeneration(job: JobState, script: Awaited<ReturnType<typeof generateScript>>) {
-  let score = 50;
-  score += Math.min(15, Math.max(0, script.sections.length - 2) * 3);
-  score += script.scenePlan?.length ? 10 : 0;
-  score += script.cta ? 5 : 0;
-  score += script.audioMood ? 5 : 0;
-  score += script.creativeDirection ? 10 : 0;
-  score += job.goal ? 4 : 0;
-  score += job.pacing ? 3 : 0;
-  score += job.brief ? 5 : 0;
-  score += job.visualDensity === "rich" ? 5 : 0;
-  score += job.intensity === "wild" ? 3 : 0;
-  return Math.max(0, Math.min(100, score));
-}
-
-function pushHistory(job: JobState) {
-  history.unshift({ ...job });
-  if (history.length > 12) {
-    history.length = 12;
-  }
-}
 
 function startBackend() {
   if (backendProcess && !backendProcess.killed) {
@@ -171,172 +74,6 @@ async function proxyToBackend(req: http.IncomingMessage, res: http.ServerRespons
   res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
   const arrayBuffer = await response.arrayBuffer();
   res.end(Buffer.from(arrayBuffer));
-}
-
-async function runJob(jobId: string) {
-  const job = jobs.get(jobId);
-  if (!job) return;
-
-  try {
-    updateJob(jobId, {
-      state: "writing",
-      stage: "script",
-      progress: 5,
-      message: "Drafting the script with Z.ai...",
-    });
-
-    const script = await generateScript({
-      topic: job.prompt,
-      tone: job.tone,
-      complexity: job.complexity,
-      targetDurationSeconds: job.seconds,
-      useAI: true,
-      apiKey: process.env.ZAI_API_KEY,
-      stylePreset: job.stylePreset,
-      audience: job.audience,
-      platform: job.platform,
-      intensity: job.intensity,
-      motionLevel: job.motionLevel,
-      visualDensity: job.visualDensity,
-      narrativeTemplate: job.narrativeTemplate,
-      goal: job.goal,
-      pacing: job.pacing,
-      brief: job.brief,
-      audioMood: job.audioMood,
-      focus: job.focus,
-    });
-
-    const qualityScore = scoreGeneration(job, script);
-    updateJob(jobId, {
-      qualityScore,
-      message: `Script drafted. Quality score: ${qualityScore}/100.`,
-    });
-
-    updateJob(jobId, {
-      state: "researching",
-      stage: "visuals",
-      progress: 25,
-      message: "Searching Unsplash for topic visuals...",
-    });
-
-    const imageCount =
-      job.visualDensity === "rich"
-        ? Math.max(8, script.sections.length * 2)
-        : job.visualDensity === "minimal"
-          ? Math.max(3, script.sections.length + 1)
-          : Math.max(5, script.sections.length + 2);
-    const images = await fetchUnsplashImages(job.prompt, script, imageCount, 1080, 1920);
-
-    updateJob(jobId, {
-      state: "audio",
-      stage: "audio",
-      progress: 45,
-      message: "Synthesizing the background audio bed...",
-    });
-
-    const audio = await generateAmbientAudioTrack(
-      job.prompt,
-      job.seconds,
-      job.audioMood || script.audioMood
-    );
-
-    updateJob(jobId, {
-      state: "bundling",
-      stage: "bundle",
-      progress: 60,
-      message: "Bundling the Remotion project...",
-    });
-
-    const outputDir = path.join(process.cwd(), "output", "ai-mode");
-    await fs.mkdir(outputDir, { recursive: true });
-    const outputPath = path.join(outputDir, `${slugify(job.prompt)}-${Date.now()}.mp4`);
-
-    const bundleLocation = await bundle({
-      entryPoint: path.join(projectRoot, "src", "index.ts"),
-      onProgress: (progress) => {
-        updateJob(jobId, {
-          state: "bundling",
-          stage: "bundle",
-          progress: Math.min(72, 60 + Math.round(progress * 12)),
-          message: "Bundling the Remotion project...",
-        });
-      },
-    });
-
-    updateJob(jobId, {
-      state: "rendering",
-      stage: "render",
-      progress: 75,
-      message: "Rendering the final video...",
-    });
-
-    const composition = await selectComposition({
-      serveUrl: bundleLocation,
-      id: "ExplainerVideo",
-      inputProps: {
-        topic: script.title,
-        script,
-        images,
-        audio,
-        targetDurationSeconds: job.seconds,
-        fontSizeScale: 1,
-      },
-    });
-
-    await renderMedia({
-      composition,
-      serveUrl: bundleLocation,
-      codec: "h264",
-      outputLocation: outputPath,
-      inputProps: {
-        topic: script.title,
-        script,
-        images,
-        audio,
-        targetDurationSeconds: job.seconds,
-        fontSizeScale: 1,
-      },
-      onProgress: ({ progress }) => {
-        updateJob(jobId, {
-          state: "rendering",
-          stage: "render",
-          progress: 75 + Math.round(progress * 25),
-          message: "Rendering the final video...",
-        });
-      },
-    });
-
-    updateJob(jobId, {
-      state: "complete",
-      stage: "done",
-      progress: 100,
-      message: "Video finished and saved locally.",
-      qualityScore,
-      outputPath,
-    });
-
-    openFile(outputPath);
-  } catch (error) {
-    updateJob(jobId, {
-      state: "error",
-      stage: "error",
-      progress: 100,
-      message: "Generation failed.",
-      error: error instanceof Error ? error.message : String(error),
-    });
-  } finally {
-    const finalJob = jobs.get(jobId);
-    if (finalJob) {
-      pushHistory(finalJob);
-    }
-    activeJobId = null;
-  }
-}
-
-function openFile(filePath: string) {
-  const openCmd =
-    process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  exec(`${openCmd} "${filePath}"`, () => {});
 }
 
 function renderHtml() {
@@ -2344,19 +2081,19 @@ function renderHtml() {
         '<div class="preview-frame">',
         '<div class="preview-kicker">Latest</div>',
         '<h3 class="preview-title">',
-        item.prompt,
+        escapeHtml(item.prompt),
         '</h3>',
         '<p class="preview-copy">',
-        item.qualityScore ? 'Score ' + item.qualityScore + '/100. ' : '',
-        item.goal ? item.goal + '. ' : '',
+        item.qualityScore ? escapeHtml('Score ' + item.qualityScore + '/100. ') : '',
+        item.goal ? escapeHtml(item.goal + '. ') : '',
         'Updated ',
-        new Date(item.updatedAt).toLocaleDateString(),
+        escapeHtml(new Date(item.updatedAt).toLocaleDateString()),
         ' • ',
-        item.stylePreset || 'custom',
+        escapeHtml(item.stylePreset || 'custom'),
         '.',
         '</p>',
         '<div class="preview-meta">',
-        tags.map((tag) => '<span class="preview-chip">' + tag + '</span>').join(''),
+        tags.map((tag) => '<span class="preview-chip">' + escapeHtml(tag) + '</span>').join(''),
         item.outputPath ? '<span class="preview-chip">Exported</span>' : '<span class="preview-chip">Queued</span>',
         '</div>',
         '</div>',
@@ -2483,25 +2220,25 @@ function renderHtml() {
         return [
           '<div class="timeline-item">',
           '<div class="timeline-top"><span>',
-          new Date(item.updatedAt).toLocaleString(),
+          escapeHtml(new Date(item.updatedAt).toLocaleString()),
           '</span><span>',
-          item.qualityScore ? item.qualityScore + '/100' : 'n/a',
+          escapeHtml(item.qualityScore ? item.qualityScore + '/100' : 'n/a'),
           '</span></div>',
           '<div class="timeline-title">',
-          item.prompt,
+          escapeHtml(item.prompt),
           '</div>',
           '<div class="timeline-meta">',
-          tags.map((tag) => '<span>' + tag + '</span>').join(''),
+          tags.map((tag) => '<span>' + escapeHtml(tag) + '</span>').join(''),
           '</div>',
           '<div class="timeline-actions">',
           '<button class="timeline-btn" data-history-id="',
-          item.id,
+          escapeHtml(item.id),
           '" data-history-focus="full">Reuse</button>',
           '<button class="timeline-btn" data-history-id="',
-          item.id,
+          escapeHtml(item.id),
           '" data-history-focus="hook">Remix hook</button>',
           '<button class="timeline-btn" data-history-id="',
-          item.id,
+          escapeHtml(item.id),
           '" data-history-focus="outro">Remix outro</button>',
           '</div>',
           '</div>',
@@ -2701,13 +2438,16 @@ function renderHtml() {
 </html>`;
 }
 
-async function readJsonBody(req: http.IncomingMessage) {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  const text = Buffer.concat(chunks).toString("utf8") || "{}";
-  return JSON.parse(text);
+function openLocalUrl(url: string) {
+  const command = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
+  const args = process.platform === "win32" ? ["/c", "start", "", url] : [url];
+  const child = spawn(command, args, {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  child.on("error", () => {});
+  child.unref();
 }
 
 const server = http.createServer(async (req, res) => {
@@ -2752,7 +2492,5 @@ server.listen(port, () => {
   startBackend();
   const url = `http://localhost:${port}`;
   console.log(`AI mode running at ${url}`);
-  const openCmd =
-    process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  exec(`${openCmd} ${url}`, () => {});
+  openLocalUrl(url);
 });

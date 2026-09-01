@@ -10,6 +10,7 @@
     "backend": "python3 backend/server.py",
     "build": "remotion render",
     "generate": "tsx bin/generate-video.ts",
+    "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

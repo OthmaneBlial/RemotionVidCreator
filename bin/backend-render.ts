@@ -11,6 +11,7 @@ import { generateScript } from "../src/utils/generate-script.js";
 import { generateAmbientAudioTrack } from "../src/utils/audio.js";
 import { fetchUnsplashImages, type UnsplashImage } from "../src/utils/unsplash.js";
 import { fetchOfflineImages, rememberOnlineImages, type VisualSource } from "../src/utils/local-assets.js";
+import { createVideoOutputPath } from "../src/utils/output-path.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -324,7 +325,7 @@ async function main() {
   });
 
   await writeFile(path.join(outputDir, ".keep"), "", "utf8").catch(() => {});
-  const outputPath = path.join(outputDir, `${payload.prompt.toLowerCase().replace(/\s+/g, "-").slice(0, 64) || "ai-video"}-${Date.now()}.mp4`);
+  const outputPath = createVideoOutputPath(outputDir, payload.prompt);
 
   const { bundleLocation, cached: bundleCached } = await getBundleLocation(statusFile, payload, qualityScore, timings);
   timings.bundleMs = Math.round(

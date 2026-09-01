@@ -108,9 +108,13 @@ def compact_history_entry(entry: dict):
 
 def get_unsplash_usage():
   rate_file = ROOT / ".cache" / "unsplash-rate-limit.json"
-  state = read_json(rate_file, {"windowStart": int(time.time() * 1000), "requestCount": 0})
-  window_start = int(state.get("windowStart", int(time.time() * 1000)))
+  now = int(time.time() * 1000)
+  state = read_json(rate_file, {"windowStart": now, "requestCount": 0})
+  window_start = int(state.get("windowStart", now))
   request_count = int(state.get("requestCount", 0))
+  if now - window_start >= 60 * 60 * 1000:
+    window_start = now
+    request_count = 0
   limit = 50
   remaining = max(0, limit - request_count)
   return {
