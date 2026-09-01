@@ -1180,6 +1180,60 @@ function renderHtml() {
       top: 88px;
       min-width: 0;
     }
+    .review-card {
+      overflow: hidden;
+    }
+    .review-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      border-bottom: 1px solid rgba(23, 33, 29, 0.09);
+      background: #f6f1e8;
+    }
+    .review-tab {
+      min-width: 0;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      padding: 10px 8px;
+      background: transparent;
+      color: var(--muted);
+      font: 800 11px/1.2 Manrope, sans-serif;
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+    .review-tab:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.58);
+    }
+    .review-tab.active {
+      color: var(--text);
+      background: #ffffff;
+      border-color: rgba(23, 33, 29, 0.1);
+      box-shadow: 0 8px 18px rgba(79, 64, 40, 0.06);
+    }
+    .review-tab:focus-visible {
+      outline: 3px solid rgba(8, 127, 114, 0.22);
+      outline-offset: 1px;
+    }
+    .review-panel {
+      padding: 18px;
+    }
+    .review-panel[hidden] {
+      display: none;
+    }
+    .review-panel-note {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .review-panel-note strong {
+      color: var(--text);
+      font-size: 13px;
+    }
     .preview-frame {
       min-height: 230px;
       background:
@@ -1277,6 +1331,10 @@ function renderHtml() {
         flex: 1;
         justify-content: center;
       }
+      .review-tab {
+        padding-inline: 4px;
+        font-size: 10px;
+      }
     }
   </style>
 </head>
@@ -1308,7 +1366,7 @@ function renderHtml() {
       </p>
       <div class="hero-actions">
         <a class="button hero-link" href="#creation-brief">Start</a>
-        <div class="hero-note">No extra tabs.</div>
+        <div class="hero-note">One focused flow.</div>
       </div>
     </section>
 
@@ -1504,14 +1562,6 @@ function renderHtml() {
       </div>
 
       <aside class="right-rail">
-        <section id="attributionCard" class="card panel attribution-card">
-          <div class="section-title">
-            <strong>Unsplash attribution</strong>
-            <span>Required</span>
-          </div>
-          <div id="attributionPane" class="attribution-list" aria-live="polite"></div>
-        </section>
-
         <section class="card panel-stack">
           <div class="panel">
             <div class="section-title">
@@ -1547,29 +1597,29 @@ function renderHtml() {
           </div>
         </section>
 
-        <section class="card panel preview-card">
-          <div class="section-title">
-            <strong>Preview</strong>
-            <span>Latest render</span>
+        <section class="card review-card">
+          <div id="reviewTabs" class="review-tabs" role="tablist" aria-label="Review output">
+            <button id="reviewTabPreview" class="review-tab active" type="button" role="tab" aria-selected="true" aria-controls="reviewPanelPreview" data-review-tab="preview">Preview</button>
+            <button id="reviewTabHistory" class="review-tab" type="button" role="tab" aria-selected="false" aria-controls="reviewPanelHistory" data-review-tab="history" tabindex="-1">History</button>
+            <button id="reviewTabCredits" class="review-tab" type="button" role="tab" aria-selected="false" aria-controls="reviewPanelCredits" data-review-tab="credits" tabindex="-1">Credits</button>
+            <button id="reviewTabLogs" class="review-tab" type="button" role="tab" aria-selected="false" aria-controls="reviewPanelLogs" data-review-tab="logs" tabindex="-1">Logs</button>
           </div>
-          <div id="previewPane" class="preview-pane" aria-live="polite"></div>
-        </section>
-
-        <section class="card panel-stack">
-          <div class="panel">
-            <div class="section-title">
-              <strong>History</strong>
-              <span>Reuse</span>
-            </div>
+          <div id="reviewPanelPreview" class="review-panel" role="tabpanel" aria-labelledby="reviewTabPreview" data-review-panel="preview">
+            <div class="review-panel-note"><strong>Latest render</strong><span>Output</span></div>
+            <div id="previewPane" class="preview-pane" aria-live="polite"></div>
+          </div>
+          <div id="reviewPanelHistory" class="review-panel" role="tabpanel" aria-labelledby="reviewTabHistory" data-review-panel="history" hidden>
+            <div class="review-panel-note"><strong>Generation history</strong><span>Reuse or remix</span></div>
             <div class="timeline" id="history">Loading history...</div>
           </div>
-          <div class="panel">
-            <div class="section-title">
-              <strong>Log</strong>
-              <span>Trace</span>
-            </div>
+          <div id="reviewPanelCredits" class="review-panel" role="tabpanel" aria-labelledby="reviewTabCredits" data-review-panel="credits" hidden>
+            <div class="review-panel-note"><strong>Unsplash attribution</strong><span>Required</span></div>
+            <div id="attributionPane" class="attribution-list" aria-live="polite"></div>
+          </div>
+          <div id="reviewPanelLogs" class="review-panel" role="tabpanel" aria-labelledby="reviewTabLogs" data-review-panel="logs" hidden>
+            <div class="review-panel-note"><strong>Diagnostics</strong><span>Technical</span></div>
             <details class="diagnostics-panel">
-              <summary>Show diagnostics <span>Technical</span></summary>
+              <summary>Show diagnostics <span>Trace</span></summary>
               <div class="advanced-fields">
                 <div class="log" id="log">Waiting.</div>
               </div>
@@ -1641,6 +1691,9 @@ function renderHtml() {
     const presetChips = document.getElementById("presetChips");
     const presetGuideEl = document.getElementById("presetGuide");
     const resetButton = document.getElementById("reset");
+    const reviewTabsEl = document.getElementById("reviewTabs");
+    const reviewTabButtons = Array.from(document.querySelectorAll("[data-review-tab]"));
+    const reviewPanels = Array.from(document.querySelectorAll("[data-review-panel]"));
     let pollTimer = null;
     let activeJobId = null;
     let usageTimer = null;
@@ -1653,6 +1706,19 @@ function renderHtml() {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function selectReviewTab(tabName, shouldFocus = false) {
+      reviewTabButtons.forEach((tab) => {
+        const selected = tab.getAttribute("data-review-tab") === tabName;
+        tab.classList.toggle("active", selected);
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        if (selected && shouldFocus) tab.focus();
+      });
+      reviewPanels.forEach((panel) => {
+        panel.hidden = panel.getAttribute("data-review-panel") !== tabName;
+      });
     }
 
     function safeUnsplashUrl(value) {
@@ -2175,6 +2241,8 @@ function renderHtml() {
         job.error ? "Error: " + job.error : null,
       ].filter(Boolean).join("\\n");
       renderAttributions(job.images || job.imageCredits || []);
+      if (job.state === "complete") selectReviewTab("preview");
+      if (job.state === "error") selectReviewTab("logs");
       button.disabled = job.state !== "complete" && job.state !== "error" && job.state !== "idle";
     }
 
@@ -2426,7 +2494,33 @@ function renderHtml() {
 
     visualSourceEl.addEventListener("change", syncHeaderVisualSource);
 
+    reviewTabsEl?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const tabName = target.getAttribute("data-review-tab");
+      if (tabName) selectReviewTab(tabName);
+    });
+
+    reviewTabsEl?.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const activeIndex = reviewTabButtons.findIndex(
+        (tab) => tab.getAttribute("aria-selected") === "true",
+      );
+      const lastIndex = reviewTabButtons.length - 1;
+      const nextIndex = event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? lastIndex
+          : event.key === "ArrowRight"
+            ? (activeIndex + 1) % reviewTabButtons.length
+            : (activeIndex - 1 + reviewTabButtons.length) % reviewTabButtons.length;
+      const nextName = reviewTabButtons[nextIndex]?.getAttribute("data-review-tab");
+      if (nextName) selectReviewTab(nextName, true);
+    });
+
     applyDefaults();
+    selectReviewTab("preview");
     renderPreview(null);
     renderAttributions([]);
     refreshBudget();
