@@ -11,7 +11,12 @@ output/
 *.mov
 *.webm
 src/root.generated.tsx
+public/images/
+
+# Generated runtime state
+.cache/
+__pycache__/
+*.py[cod]
 
 # Local planning and Unsplash submission assets
 base/
-.cache/remotion-bundle/
