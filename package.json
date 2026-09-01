@@ -1,7 +1,21 @@
 {
   "name": "remotionvidcreator",
   "version": "1.0.0",
-  "description": "RemotionVidCreator",
+  "description": "Turn a topic or creative brief into a customizable Remotion explainer video and render it locally.",
+  "license": "MIT",
+  "homepage": "https://othmaneblial.github.io/RemotionVidCreator/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OthmaneBlial/RemotionVidCreator.git"
+  },
+  "keywords": [
+    "remotion",
+    "ai-video-generator",
+    "programmatic-video",
+    "explainer-video",
+    "short-form-video",
+    "video-automation"
+  ],
   "type": "module",
   "scripts": {
     "start": "npm run dev",
@@ -9,9 +23,11 @@
     "ai": "npm run dev",
     "backend": "python3 backend/server.py",
     "build": "remotion render",
+    "check": "npm test && npm run typecheck && npm run verify:composition",
     "generate": "tsx bin/generate-video.ts",
     "test": "tsx --test tests/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:composition": "remotion compositions src/index.ts --log=error"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.520",

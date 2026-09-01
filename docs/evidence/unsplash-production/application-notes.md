@@ -2,7 +2,7 @@
 
 Application name:
 
-- Remotion AI Video Generator
+- RemotionVidCreator
 
 Application description:
 

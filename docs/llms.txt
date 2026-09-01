@@ -1,0 +1,20 @@
+# RemotionVidCreator
+
+RemotionVidCreator is a developer-owned workflow for turning a topic or creative
+brief into a customizable explainer video and rendering it locally with Remotion.
+
+## Canonical resources
+
+- Website: https://othmaneblial.github.io/RemotionVidCreator/
+- Repository: https://github.com/OthmaneBlial/RemotionVidCreator
+- README: https://github.com/OthmaneBlial/RemotionVidCreator#readme
+- Releases: https://github.com/OthmaneBlial/RemotionVidCreator/releases
+
+## Capability boundaries
+
+- The browser workspace renders 9:16 video; the CLI also supports 16:9, 1:1, 4:5, and 4:3.
+- Rendering, local job state, and MP4 output run on the user's machine.
+- Z.ai scripting and Unsplash image search are optional network paths.
+- The app creates procedural ambient audio, not narration or text-to-speech.
+- The project is not a timeline editor, managed rendering API, or text-to-video foundation model.
+- Project code is MIT licensed. Remotion is a separate source-available dependency with its own terms.

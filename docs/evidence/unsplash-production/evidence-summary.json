@@ -1,24 +1,22 @@
 {
-  "folder": "/home/othmane/Downloads/RemotionVidCreator/base/unsplash-production-evidence-2026-04-29",
+  "folder": "docs/evidence/unsplash-production",
   "clicked_photographer_url": "https://unsplash.com/@thomasrichter?utm_source=remotion-ai-video-generator&utm_medium=referral",
   "recommended_upload_files": [
     "01-app-attribution-visible-online-mode.png",
     "02-photographer-link-hover-highlight.png",
     "03-rendered-video-attribution-overlay.jpg",
-    "04-code-attribution-and-utm-links.png",
-    "07-desktop-click-through-photographer-link.mp4",
-    "08-desktop-after-click-address-bar.png"
+    "04-code-attribution-and-utm-links.png"
   ],
   "all_files": [
     "01-app-attribution-visible-online-mode.png",
     "02-photographer-link-hover-highlight.png",
     "03-rendered-video-attribution-overlay.jpg",
     "04-code-attribution-and-utm-links.png",
-    "07-desktop-click-through-photographer-link.mp4",
-    "08-desktop-after-click-address-bar.png",
+    "application-notes.md",
     "README.md",
     "clicked-photographer-url.txt",
     "code-evidence.html",
-    "evidence-summary.json"
+    "evidence-summary.json",
+    "explain-why-solar-energy-is-becoming-cheaper-than-coal-in-plain--1777448468216.mp4"
   ]
 }

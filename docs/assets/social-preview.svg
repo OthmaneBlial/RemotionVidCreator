@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080b0d"/>
+      <stop offset="0.56" stop-color="#0f171b"/>
+      <stop offset="1" stop-color="#17120d"/>
+    </linearGradient>
+    <radialGradient id="cyan" cx="0.1" cy="0.1" r="0.75">
+      <stop offset="0" stop-color="#8edcff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#8edcff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="amber" cx="0.95" cy="0.1" r="0.75">
+      <stop offset="0" stop-color="#ffb768" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#ffb768" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="poster">
+      <rect x="870" y="54" width="270" height="522" rx="34"/>
+    </clipPath>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#000" flood-opacity="0.7"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#cyan)"/>
+  <rect width="1200" height="630" fill="url(#amber)"/>
+  <rect x="42" y="42" width="1116" height="546" rx="30" fill="none" stroke="#f1f0e8" stroke-opacity="0.16" stroke-width="2"/>
+
+  <circle cx="78" cy="88" r="7" fill="#8edcff"/>
+  <text x="98" y="96" fill="#8edcff" font-family="Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="3">REMOTIONVIDCREATOR</text>
+  <text x="76" y="250" fill="#f1f0e8" font-family="Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="-3">FROM BRIEF TO</text>
+  <text x="76" y="332" fill="#f1f0e8" font-family="Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="-3">LOCAL MP4</text>
+  <text x="80" y="398" fill="#c8cbc2" font-family="Arial, sans-serif" font-size="25">Structured direction. Remotion render. Your machine.</text>
+
+  <rect x="76" y="456" width="138" height="40" rx="20" fill="#f1f0e8" fill-opacity="0.08" stroke="#f1f0e8" stroke-opacity="0.2"/>
+  <text x="98" y="482" fill="#f1f0e8" font-family="Arial, sans-serif" font-size="15" font-weight="700">9:16 default</text>
+  <rect x="228" y="456" width="173" height="40" rx="20" fill="#f1f0e8" fill-opacity="0.08" stroke="#f1f0e8" stroke-opacity="0.2"/>
+  <text x="250" y="482" fill="#f1f0e8" font-family="Arial, sans-serif" font-size="15" font-weight="700">Local H.264 render</text>
+  <rect x="415" y="456" width="166" height="40" rx="20" fill="#f1f0e8" fill-opacity="0.08" stroke="#f1f0e8" stroke-opacity="0.2"/>
+  <text x="437" y="482" fill="#f1f0e8" font-family="Arial, sans-serif" font-size="15" font-weight="700">Offline first run</text>
+
+  <rect x="858" y="42" width="294" height="546" rx="42" fill="#020303" stroke="#f1f0e8" stroke-opacity="0.3" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="870" y="54" width="270" height="522" rx="34" fill="#020303"/>
+</svg>

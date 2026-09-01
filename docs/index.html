@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RemotionVidCreator — Brief-to-video workflow for Remotion</title>
+    <meta
+      name="description"
+      content="Turn a topic or creative brief into a customizable 9:16 explainer video, then render the MP4 locally with Remotion."
+    />
+    <link
+      rel="canonical"
+      href="https://othmaneblial.github.io/RemotionVidCreator/"
+    />
+    <meta name="theme-color" content="#080b0d" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RemotionVidCreator" />
+    <meta
+      property="og:title"
+      content="RemotionVidCreator — Brief to local MP4"
+    />
+    <meta
+      property="og:description"
+      content="An opinionated Remotion workflow for turning a structured brief into a reproducible vertical video."
+    />
+    <meta
+      property="og:url"
+      content="https://othmaneblial.github.io/RemotionVidCreator/"
+    />
+    <meta
+      property="og:image"
+      content="https://othmaneblial.github.io/RemotionVidCreator/assets/social-preview.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="RemotionVidCreator title beside a vertical solar-energy explainer video frame"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="RemotionVidCreator — Brief to local MP4"
+    />
+    <meta
+      name="twitter:description"
+      content="Create a structured vertical explainer and render it locally with Remotion."
+    />
+    <meta
+      name="twitter:image"
+      content="https://othmaneblial.github.io/RemotionVidCreator/assets/social-preview.png"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800;9..144,900&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #080b0d;
+        --paper: #f1f0e8;
+        --paper-soft: #c8cbc2;
+        --line: rgba(241, 240, 232, 0.16);
+        --line-strong: rgba(241, 240, 232, 0.32);
+        --cyan: #8edcff;
+        --amber: #ffb768;
+        --mint: #8ef7c7;
+        --panel: rgba(19, 24, 27, 0.82);
+        --radius: 26px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        background: var(--ink);
+      }
+      body {
+        margin: 0;
+        min-width: 320px;
+        overflow-x: clip;
+        font-family: Manrope, sans-serif;
+        color: var(--paper);
+        background:
+          radial-gradient(
+            circle at 12% 7%,
+            rgba(142, 220, 255, 0.15),
+            transparent 22rem
+          ),
+          radial-gradient(
+            circle at 92% 18%,
+            rgba(255, 183, 104, 0.12),
+            transparent 24rem
+          ),
+          var(--ink);
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.12;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+      }
+      a {
+        color: inherit;
+      }
+      .skip {
+        position: fixed;
+        left: 16px;
+        top: -80px;
+        z-index: 100;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .skip:focus {
+        top: 16px;
+      }
+      .wrap {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+      nav {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 24px 0;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        font-weight: 800;
+      }
+      .mark {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        background: linear-gradient(140deg, var(--cyan), var(--amber));
+        color: var(--ink);
+        letter-spacing: -0.08em;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 13px;
+      }
+      .nav-links a {
+        color: var(--paper-soft);
+        text-decoration: none;
+      }
+      .nav-links a:hover {
+        color: var(--paper);
+      }
+      .nav-cta {
+        padding: 10px 14px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.06fr) minmax(330px, 0.72fr);
+        gap: clamp(42px, 8vw, 108px);
+        align-items: center;
+        min-height: 760px;
+        padding: 48px 0 92px;
+      }
+      .eyebrow,
+      .section-kicker {
+        color: var(--cyan);
+        font:
+          800 11px/1.4 Manrope,
+          sans-serif;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+      }
+      h1,
+      h2 {
+        font-family: Fraunces, Georgia, serif;
+      }
+      h1 {
+        margin: 18px 0 22px;
+        max-width: 10.5ch;
+        font-size: clamp(54px, 7vw, 98px);
+        line-height: 0.91;
+        letter-spacing: -0.055em;
+      }
+      .hero-copy {
+        max-width: 650px;
+        color: var(--paper-soft);
+        font-size: clamp(16px, 1.8vw, 20px);
+        line-height: 1.7;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 32px;
+      }
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 52px;
+        padding: 0 20px;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .button.primary {
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .button.secondary {
+        border: 1px solid var(--line-strong);
+        color: var(--paper);
+      }
+      .proof-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 24px;
+      }
+      .proof-line span {
+        padding: 8px 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--paper-soft);
+        font-size: 11px;
+      }
+      .film-stage {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 640px;
+      }
+      .film-stage::before {
+        content: "";
+        position: absolute;
+        width: 82%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        box-shadow: 0 0 100px rgba(142, 220, 255, 0.12);
+      }
+      .phone {
+        position: relative;
+        width: min(330px, 82vw);
+        aspect-ratio: 9 / 16;
+        padding: 10px;
+        overflow: hidden;
+        border: 1px solid var(--line-strong);
+        border-radius: 38px;
+        background: #020303;
+        box-shadow: 0 42px 100px rgba(0, 0, 0, 0.6);
+        transform: rotate(2deg);
+      }
+      .phone video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 29px;
+        background: #000;
+      }
+      .float-card {
+        position: absolute;
+        z-index: 2;
+        max-width: 190px;
+        padding: 13px 15px;
+        border: 1px solid var(--line-strong);
+        border-radius: 16px;
+        background: rgba(8, 11, 13, 0.9);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .float-card strong {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--mint);
+      }
+      .float-one {
+        top: 18%;
+        left: -7%;
+      }
+      .float-two {
+        right: -8%;
+        bottom: 18%;
+      }
+
+      .signal {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      .signal div {
+        padding: 24px;
+        border-right: 1px solid var(--line);
+      }
+      .signal div:last-child {
+        border-right: 0;
+      }
+      .signal strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 18px;
+      }
+      .signal span {
+        color: var(--paper-soft);
+        font-size: 12px;
+      }
+
+      section {
+        padding: 112px 0;
+      }
+      .section-head {
+        display: grid;
+        grid-template-columns: 0.72fr 1.28fr;
+        gap: 48px;
+        align-items: end;
+        margin-bottom: 50px;
+      }
+      h2 {
+        margin: 10px 0 0;
+        max-width: 11ch;
+        font-size: clamp(42px, 6vw, 72px);
+        line-height: 0.98;
+        letter-spacing: -0.045em;
+      }
+      .section-lede {
+        margin: 0;
+        max-width: 620px;
+        color: var(--paper-soft);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        counter-reset: flow;
+      }
+      .flow article,
+      .control-card,
+      .boundary-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(
+          160deg,
+          rgba(29, 35, 38, 0.82),
+          rgba(13, 17, 19, 0.78)
+        );
+      }
+      .flow article {
+        min-height: 310px;
+        padding: 26px;
+        counter-increment: flow;
+      }
+      .flow article::before {
+        content: "0" counter(flow);
+        color: var(--amber);
+        font-size: 12px;
+        letter-spacing: 0.18em;
+      }
+      .flow h3 {
+        margin: 66px 0 12px;
+        font:
+          800 24px/1.1 Manrope,
+          sans-serif;
+        letter-spacing: -0.04em;
+      }
+      .flow p {
+        margin: 0;
+        color: var(--paper-soft);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      .flow code {
+        display: inline-block;
+        margin-top: 24px;
+        color: var(--cyan);
+        font-size: 12px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 16px;
+      }
+      .control-card {
+        padding: 30px;
+      }
+      .control-card h3 {
+        margin: 0 0 8px;
+        font-size: 22px;
+      }
+      .control-card p {
+        color: var(--paper-soft);
+        line-height: 1.7;
+      }
+      .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 28px;
+      }
+      .chip-grid span {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        color: var(--paper-soft);
+        font-size: 12px;
+      }
+      .command {
+        margin: 24px 0 0;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #050708;
+        padding: 20px;
+        color: var(--mint);
+        font:
+          500 13px/1.8 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+      .boundary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .boundary-card {
+        padding: 30px;
+      }
+      .boundary-card h3 {
+        margin: 0 0 16px;
+        font-size: 20px;
+      }
+      .boundary-card ul {
+        display: grid;
+        gap: 13px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: var(--paper-soft);
+      }
+      .boundary-card li {
+        padding-left: 22px;
+        position: relative;
+        line-height: 1.55;
+      }
+      .boundary-card li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.62em;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--mint);
+      }
+      .boundary-card.optional li::before {
+        background: var(--amber);
+      }
+
+      .final-cta {
+        text-align: center;
+        padding-bottom: 130px;
+      }
+      .final-cta h2 {
+        max-width: 14ch;
+        margin-inline: auto;
+      }
+      .final-cta p {
+        max-width: 620px;
+        margin: 22px auto 0;
+        color: var(--paper-soft);
+        line-height: 1.7;
+      }
+      .final-cta .actions {
+        justify-content: center;
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 28px 0 44px;
+        border-top: 1px solid var(--line);
+        color: var(--paper-soft);
+        font-size: 12px;
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+          padding-top: 70px;
+        }
+        .hero-copy {
+          max-width: 58ch;
+        }
+        .film-stage {
+          min-height: 620px;
+        }
+        .section-head {
+          grid-template-columns: 1fr;
+          gap: 22px;
+        }
+        .flow {
+          grid-template-columns: 1fr;
+        }
+        .flow article {
+          min-height: 240px;
+        }
+        .controls,
+        .boundary {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 680px) {
+        .wrap {
+          width: min(100% - 28px, 1180px);
+        }
+        .nav-links a:not(.nav-cta) {
+          display: none;
+        }
+        .hero {
+          min-height: auto;
+          padding: 64px 0 80px;
+          gap: 38px;
+        }
+        h1 {
+          font-size: clamp(50px, 16vw, 70px);
+        }
+        .film-stage {
+          min-height: 570px;
+        }
+        .phone {
+          width: min(286px, 78vw);
+          border-radius: 32px;
+        }
+        .float-card {
+          max-width: 150px;
+          padding: 10px 12px;
+          font-size: 10px;
+        }
+        .float-one {
+          left: -1%;
+          top: 20%;
+        }
+        .float-two {
+          right: -1%;
+        }
+        .signal {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .signal div:nth-child(2) {
+          border-right: 0;
+        }
+        .signal div:nth-child(-n + 2) {
+          border-bottom: 1px solid var(--line);
+        }
+        section {
+          padding: 82px 0;
+        }
+        .control-card,
+        .boundary-card {
+          padding: 23px;
+        }
+        footer {
+          flex-direction: column;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .phone {
+          transform: none;
+        }
+      }
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "RemotionVidCreator",
+        "description": "A local browser workspace and CLI that turn a topic or creative brief into a rendered Remotion explainer video.",
+        "applicationCategory": "DeveloperApplication",
+        "url": "https://othmaneblial.github.io/RemotionVidCreator/",
+        "codeRepository": "https://github.com/OthmaneBlial/RemotionVidCreator",
+        "license": "https://github.com/OthmaneBlial/RemotionVidCreator/blob/main/LICENSE",
+        "programmingLanguage": ["TypeScript", "Python"]
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="wrap">
+      <nav aria-label="Primary navigation">
+        <a class="brand" href="#top"
+          ><span class="mark">R</span><span>RemotionVidCreator</span></a
+        >
+        <div class="nav-links">
+          <a href="#workflow">Workflow</a>
+          <a href="#boundaries">What runs where</a>
+          <a
+            class="nav-cta"
+            href="https://github.com/OthmaneBlial/RemotionVidCreator"
+            >GitHub ↗</a
+          >
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <div id="top" class="wrap hero">
+        <div>
+          <div class="eyebrow">Developer-owned video workflow</div>
+          <h1>From rough brief to rendered short.</h1>
+          <p class="hero-copy">
+            Shape a topic with narrative, audience, motion, and visual controls.
+            RemotionVidCreator builds the scene plan and renders a reproducible
+            MP4 on your machine.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#quickstart">Create one locally</a>
+            <a
+              class="button secondary"
+              href="https://github.com/OthmaneBlial/RemotionVidCreator#readme"
+              >Read the docs</a
+            >
+          </div>
+          <div class="proof-line" aria-label="Key capabilities">
+            <span>9:16 default</span><span>Local H.264 render</span
+            ><span>Offline image library</span
+            ><span>Optional Z.ai + Unsplash</span>
+          </div>
+        </div>
+
+        <div class="film-stage" aria-label="Real ten-second output example">
+          <div class="float-card float-one">
+            <strong>01 · Brief</strong>Topic, goal, pace, audience
+          </div>
+          <div class="phone">
+            <video
+              autoplay
+              muted
+              loop
+              playsinline
+              controls
+              poster="evidence/unsplash-production/03-rendered-video-attribution-overlay.jpg"
+            >
+              <source
+                src="evidence/unsplash-production/explain-why-solar-energy-is-becoming-cheaper-than-coal-in-plain--1777448468216.mp4"
+                type="video/mp4"
+              />
+              Your browser does not support the demo video.
+            </video>
+          </div>
+          <div class="float-card float-two">
+            <strong>03 · MP4</strong>1080 × 1920, local output
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap signal" aria-label="Output facts">
+        <div>
+          <strong>2 surfaces</strong><span>Browser workspace + CLI</span>
+        </div>
+        <div>
+          <strong>5 ratios</strong><span>9:16, 16:9, 1:1, 4:5, 4:3</span>
+        </div>
+        <div>
+          <strong>0-key start</strong
+          ><span>Template script + offline visuals</span>
+        </div>
+        <div>
+          <strong>Your compute</strong><span>No managed-render fee</span>
+        </div>
+      </div>
+
+      <section id="workflow" class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">One opinionated path</div>
+            <h2>Control the decisions that change the cut.</h2>
+          </div>
+          <p class="section-lede">
+            This is not another timeline editor or rendering cloud. It is a
+            focused first-success workflow on top of Remotion: structured input,
+            inspectable creative direction, and an output you can reproduce.
+          </p>
+        </div>
+        <div class="flow">
+          <article>
+            <h3>Write the brief</h3>
+            <p>
+              Start with the idea, goal, audience, platform, pace, and duration.
+              A useful template fallback works without an AI key.
+            </p>
+            <code>topic → intent → constraints</code>
+          </article>
+          <article>
+            <h3>Shape the direction</h3>
+            <p>
+              Choose narrative, style, intensity, motion, density, and imagery.
+              Use bundled photos or opt into compliant Unsplash sourcing.
+            </p>
+            <code>scene plan → visuals → audio bed</code>
+          </article>
+          <article>
+            <h3>Render locally</h3>
+            <p>
+              The Python queue tracks the job while the TypeScript worker
+              bundles the composition and writes an H.264 MP4 to your local
+              output folder.
+            </p>
+            <code>Remotion → output/ai-mode/*.mp4</code>
+          </article>
+        </div>
+      </section>
+
+      <section class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Creative control</div>
+            <h2>Presets without the black box.</h2>
+          </div>
+          <p class="section-lede">
+            Keep the speed of a generator while preserving the knobs that make
+            different briefs feel different.
+          </p>
+        </div>
+        <div class="controls">
+          <article class="control-card">
+            <h3>Direction deck</h3>
+            <p>
+              Every option maps to script or composition behavior rather than
+              decorative UI.
+            </p>
+            <div class="chip-grid">
+              <span>Cinematic</span><span>Educational</span
+              ><span>Documentary</span><span>Founders</span
+              ><span>Fast pace</span><span>Myth-busting</span
+              ><span>High motion</span><span>Rich density</span>
+            </div>
+          </article>
+          <article id="quickstart" class="control-card">
+            <h3>First render</h3>
+            <p>
+              Node.js and Python 3 are the only setup prerequisites for the
+              default path.
+            </p>
+            <pre
+              class="command"
+            ><code>git clone https://github.com/OthmaneBlial/RemotionVidCreator.git
+cd RemotionVidCreator
+npm ci
+cp .env.example .env
+npm start</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="boundaries" class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Clear boundaries</div>
+            <h2>Know what stays local.</h2>
+          </div>
+          <p class="section-lede">
+            Rendering, job history, and output stay on your machine. Optional
+            providers receive only the prompt or image query needed for the path
+            you enable.
+          </p>
+        </div>
+        <div class="boundary">
+          <article class="boundary-card">
+            <h3>Runs on your machine</h3>
+            <ul>
+              <li>Browser workspace and Python job queue</li>
+              <li>Bundled offline image selection</li>
+              <li>Procedural ambient audio generation</li>
+              <li>Remotion bundle, render, history, and MP4 output</li>
+            </ul>
+          </article>
+          <article class="boundary-card optional">
+            <h3>Optional network paths</h3>
+            <ul>
+              <li>Z.ai receives the topic and brief when configured</li>
+              <li>
+                Unsplash receives image searches when online visuals are
+                selected
+              </li>
+              <li>
+                The classic CLI can fetch Wikipedia context and Picsum images
+              </li>
+              <li>
+                Remote fonts or image URLs may be fetched during a selected
+                render
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="wrap final-cta">
+        <div class="section-kicker">Ready for a real render?</div>
+        <h2>Own the brief, composition, and output.</h2>
+        <p>
+          Clone the project, make the first no-key render, then connect only the
+          providers your workflow needs.
+        </p>
+        <div class="actions">
+          <a
+            class="button primary"
+            href="https://github.com/OthmaneBlial/RemotionVidCreator"
+            >View on GitHub</a
+          ><a
+            class="button secondary"
+            href="evidence/unsplash-production/explain-why-solar-energy-is-becoming-cheaper-than-coal-in-plain--1777448468216.mp4"
+            >Watch the sample MP4</a
+          >
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <span>RemotionVidCreator · MIT-licensed project code</span
+      ><span
+        >Remotion is a separate source-available dependency with its own license
+        terms.</span
+      >
+    </footer>
+  </body>
+</html>
